@@ -5,7 +5,10 @@
   // Config — fill MINER_ADDRESS in after running contracts/scripts/deploy.js
   // ---------------------------------------------------------------------
   const BUFFCAT_TOKEN_ADDRESS = "0xD80aFe3Be875a14155FDd96D39669A6734E12036";
-  const MINER_ADDRESS = "0xE88403a8981933fFCe41085513Ae7dd7F78d37C1";
+  // Empty = dashboard runs in preview mode. Set this to the BuffCatMiner
+  // address printed by contracts/scripts/deploy.js — do NOT reuse the old
+  // NeiroMiner deployment (0xE88403a8...) — it is bound to the old token.
+  const MINER_ADDRESS = "";
   const ROBINHOOD_CHAIN_ID = "0x1237";
   const ROBINHOOD_CHAIN_PARAMS = {
     chainId: ROBINHOOD_CHAIN_ID,
