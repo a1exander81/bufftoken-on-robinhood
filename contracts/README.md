@@ -10,10 +10,15 @@ npx hardhat test
 ```
 
 If `npx hardhat compile` fails to reach `binaries.soliditylang.org` (e.g. in a
-network-restricted sandbox), install `solc` from npm instead and seed
-Hardhat's compiler cache from it — see git history of this file's directory
-for the exact steps used during development. On a normal machine with open
-internet access this isn't necessary; Hardhat downloads the compiler itself.
+network-restricted sandbox), use the offline config, which compiles with the
+`solc` package from `node_modules` instead of downloading a compiler:
+
+```
+npx hardhat --config hardhat.config.offline.js test
+```
+
+On a normal machine with open internet access this isn't necessary; Hardhat
+downloads the compiler itself.
 
 ## Deploying
 
@@ -28,8 +33,36 @@ already in use on the live site. Override any of them with
 `BUFFCAT_TOKEN_ADDRESS`, `LP_WALLET_ADDRESS`, `OWNER_FEE_WALLET_ADDRESS`,
 `ECO_WALLET_ADDRESS` if they ever change.
 
+## Verifying on the explorer (Blockscout)
+
+Verification publishes the source code on
+[robinhoodchain.blockscout.com](https://robinhoodchain.blockscout.com) so
+anyone can read the contract and use the explorer's Read/Write tabs. The
+five arguments must be exactly the ones printed by the deploy script:
+
+```
+npx hardhat verify --network robinhoodChain <MINER_ADDRESS> \
+  <BUFFCAT_TOKEN> <LP_WALLET> <OWNER_FEE_WALLET> <ECO_WALLET> <ADMIN>
+```
+
+With the current defaults from `scripts/deploy.js` (replace the miner
+address and admin with your own):
+
+```
+npx hardhat verify --network robinhoodChain 0xYOUR_MINER_ADDRESS \
+  0xD80aFe3Be875a14155FDd96D39669A6734E12036 \
+  0x78a851D19E2152bB7162d8924CB2Bd088aca95C8 \
+  0xc2413696576176d1e31D55a2DEdA609906a15596 \
+  0x13864051772FDFBce895d21a483eee02edaeB445 \
+  0xYOUR_ADMIN_ADDRESS
+```
+
+Once verified, the contract page shows a green check, the full source, and
+"Read Contract" / "Write Contract" tabs — that's what the mining guide's
+explorer instructions rely on.
+
 After deploying:
-1. Verify the contract on the Robinhood Chain explorer.
+1. Verify the contract on the Robinhood Chain explorer (see above).
 2. As the admin wallet, `approve` BUFFCAT to the contract and call
    `notifyRewardAmount(amount, durationSeconds)` to open the first reward
    stream — the dashboard shows "No active stream" until this happens.

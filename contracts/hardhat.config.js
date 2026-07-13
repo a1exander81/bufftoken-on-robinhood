@@ -22,4 +22,24 @@ module.exports = {
     enabled: true,
     currency: "USD",
   },
+  // Source verification on the Robinhood Chain Blockscout explorer.
+  // Blockscout doesn't require a real API key — any non-empty string works.
+  etherscan: {
+    apiKey: {
+      robinhoodChain: "blockscout",
+    },
+    customChains: [
+      {
+        network: "robinhoodChain",
+        chainId: 4663,
+        urls: {
+          apiURL: "https://robinhoodchain.blockscout.com/api",
+          browserURL: "https://robinhoodchain.blockscout.com",
+        },
+      },
+    ],
+  },
+  sourcify: {
+    enabled: false,
+  },
 };
