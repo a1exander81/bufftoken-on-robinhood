@@ -41,10 +41,37 @@
     return `${value.slice(0,4)}…${value.slice(-5)}`;
   }
 
+  const heroBalanceEl = document.getElementById('heroBalance');
+  const heroBalanceAmountEl = document.getElementById('heroBalanceAmount');
+  const heroBalanceQuipEl = document.getElementById('heroBalanceQuip');
+
+  function balanceQuip(tokens){
+    if(tokens <= 0)        return "Zero. The cat won\u2019t even make eye contact with you. Fix this.";
+    if(tokens < 100_000)   return "You gotta sell your house to buy more of this gem.";
+    if(tokens < 500_000)   return "Respectable bag. The cat lets you spot him on bench days.";
+    if(tokens < 1_000_000) return "You own a significant amount \u2014 planning a vacation to Mars soon?";
+    if(tokens < 10_000_000)return "Whale detected \uD83D\uDC0B Vlad would like to know your location.";
+    return "At this point YOU are the liquidity. The cat works for you now.";
+  }
+
+  function updateHeroBalance(tokens){
+    if(!heroBalanceEl) return;
+    if(tokens === null){
+      heroBalanceEl.hidden = true;
+      return;
+    }
+    heroBalanceAmountEl.textContent = tokens.toLocaleString(undefined, {
+      maximumFractionDigits: tokens >= 1000 ? 0 : 4
+    });
+    heroBalanceQuipEl.textContent = balanceQuip(tokens);
+    heroBalanceEl.hidden = false;
+  }
+
   function setDisconnectedState(){
     if(walletAddressEl) walletAddressEl.textContent = 'Not connected';
     if(walletBalanceEl) walletBalanceEl.textContent = '0.0000 $BUFFCAT';
     if(walletRoleEl) walletRoleEl.textContent = 'Read-only';
+    updateHeroBalance(null);
     setWalletMessage('Connect your wallet to see your $BUFFCAT balance and the equivalent USDT value.');
   }
 
@@ -94,6 +121,7 @@
       if(walletBalanceEl){
         walletBalanceEl.textContent = (await formatBalance(rawBalance, decimals)) + ' $BUFFCAT';
       }
+      updateHeroBalance(parseFloat(ethers.utils.formatUnits(rawBalance, decimals)));
       if(isOwner){
         setWalletMessage('Owner access granted. Admin controls will be available here for owner-only actions.');
       } else {
@@ -103,6 +131,7 @@
       if(walletBalanceEl){
         walletBalanceEl.textContent = '0.0000 $BUFFCAT';
       }
+      updateHeroBalance(null);
       setWalletMessage('Unable to read token balance on this network. Switch to Robinhood Chain.');
       console.error('Balance read error', err);
     }
@@ -376,6 +405,14 @@
     });
   });
 
+  document.querySelectorAll('.floater').forEach(el => {
+    const speed = parseFloat(el.dataset.speed || 0.3);
+    gsap.to(el, {
+      scrollTrigger:{trigger:document.body, start:'top top', end:'max', scrub:0.8},
+      y: () => docHeight()*speed*-0.18, ease:'none'
+    });
+  });
+
   document.querySelectorAll('.reveal').forEach(el => {
     gsap.to(el, {
       scrollTrigger:{trigger:el, start:'top 85%'},
@@ -448,51 +485,6 @@
   if(modalContinueBtn) modalContinueBtn.addEventListener('click', closeModal);
   modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
   window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
-
-  /* ================= 3D Buff Cat — scroll-linked turntable ================= */
-  (function initBuffCat3D(){
-    const iframe = document.getElementById('buffcat-embed');
-    const section = document.getElementById('model3d');
-    if(!iframe || !section || typeof Sketchfab === 'undefined' || prefersReduced) return;
-
-    const client = new Sketchfab(iframe);
-    client.init('f3189f1795874cadb6820e1d2b29a6d2', {
-      autostart: 1,
-      ui_infos: 0,
-      ui_watermark: 1,
-      success(api){
-        api.start();
-        api.addEventListener('viewerready', () => {
-          api.getCameraLookAt((err, camera) => {
-            if(err || !camera) return;
-            const target = camera.target;
-            const pos = camera.position;
-            const radius = Math.hypot(pos[0] - target[0], pos[2] - target[2]);
-            const y = pos[1];
-            const startAngle = Math.atan2(pos[2] - target[2], pos[0] - target[0]);
-
-            ScrollTrigger.create({
-              trigger: section,
-              start: 'top bottom',
-              end: 'bottom top',
-              scrub: 0.4,
-              onUpdate(self){
-                // Full 0 -> 360deg turn across the section; 360deg looks identical
-                // to 0deg, so the model reads as "back to 0" by the bottom.
-                const angle = startAngle + self.progress * Math.PI * 2;
-                const x = target[0] + radius * Math.cos(angle);
-                const z = target[2] + radius * Math.sin(angle);
-                api.setCameraLookAt([x, y, z], target, 0);
-              }
-            });
-          });
-        });
-      },
-      error(){
-        console.warn('Buff Cat 3D viewer failed to initialize.');
-      }
-    });
-  })();
 
   ScrollTrigger.refresh();
 })();

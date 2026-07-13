@@ -37,6 +37,50 @@
   </svg>
 </div>
 
+<!-- Floating meme vectors (background, scroll-parallax) -->
+<div class="float-field" aria-hidden="true">
+  <svg class="floater f1" data-speed="0.35" viewBox="0 0 60 120" xmlns="http://www.w3.org/2000/svg">
+    <line x1="30" y1="0" x2="30" y2="120" stroke="#00C805" stroke-width="5" stroke-linecap="round"/>
+    <rect x="12" y="28" width="36" height="64" rx="7" fill="#00C805"/>
+  </svg>
+  <svg class="floater f2" data-speed="0.6" viewBox="0 0 60 50" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="30" cy="34" rx="16" ry="12" fill="#d9a35e"/>
+    <circle cx="17" cy="16" r="6" fill="#d9a35e"/><circle cx="30" cy="12" r="6" fill="#d9a35e"/><circle cx="43" cy="16" r="6" fill="#d9a35e"/>
+  </svg>
+  <svg class="floater f3" data-speed="0.25" viewBox="0 0 120 48" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="8" width="14" height="32" rx="4" fill="#3BE477"/>
+    <rect x="16" y="0" width="12" height="48" rx="4" fill="#3BE477"/>
+    <rect x="30" y="20" width="60" height="8" rx="4" fill="#3BE477"/>
+    <rect x="92" y="0" width="12" height="48" rx="4" fill="#3BE477"/>
+    <rect x="106" y="8" width="14" height="32" rx="4" fill="#3BE477"/>
+  </svg>
+  <svg class="floater f4" data-speed="0.5" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M30 0C42 18 46 36 46 54c0 8-3 16-8 22H22c-5-6-8-14-8-22C14 36 18 18 30 0Z" fill="#EAF2EC"/>
+    <circle cx="30" cy="40" r="8" fill="#0A0F13"/>
+    <path d="M14 62 4 84l14-6ZM46 62l10 22-14-6Z" fill="#00C805"/>
+    <path d="M24 80h12l-6 20Z" fill="#FFD97A"/>
+  </svg>
+  <svg class="floater f5" data-speed="0.42" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="30" cy="30" r="28" fill="#E8B33C"/>
+    <circle cx="30" cy="30" r="22" fill="none" stroke="#8a5a2b" stroke-width="2" stroke-dasharray="3 6"/>
+    <text x="30" y="41" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="900" font-size="30" fill="#8a5a2b">B</text>
+  </svg>
+  <svg class="floater f6" data-speed="0.7" viewBox="0 0 60 120" xmlns="http://www.w3.org/2000/svg">
+    <line x1="30" y1="0" x2="30" y2="120" stroke="#3BE477" stroke-width="5" stroke-linecap="round"/>
+    <rect x="12" y="20" width="36" height="70" rx="7" fill="#3BE477"/>
+  </svg>
+  <svg class="floater f7" data-speed="0.3" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+    <path d="M40 4 72 40H54v36H26V40H8Z" fill="#00C805"/>
+  </svg>
+  <svg class="floater f8" data-speed="0.55" viewBox="0 0 60 50" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="30" cy="34" rx="16" ry="12" fill="#3BE477"/>
+    <circle cx="17" cy="16" r="6" fill="#3BE477"/><circle cx="30" cy="12" r="6" fill="#3BE477"/><circle cx="43" cy="16" r="6" fill="#3BE477"/>
+  </svg>
+  <svg class="floater f9" data-speed="0.2" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 2l4 12 12 4-12 4-4 12-4-12-12-4 12-4Z" fill="#FFD97A"/>
+  </svg>
+</div>
+
 <div class="vignette"></div>
 
 <!-- Flying green candle (scroll-driven) -->
@@ -56,7 +100,6 @@
   </button>
   <div class="nav-links" id="navLinks">
     <a href="#about">About</a>
-    <a href="#model3d">3D Cat</a>
     <a href="#token">Token</a>
     <a href="#chart">Chart</a>
     <a href="#buy">How to Buy</a>
@@ -93,6 +136,10 @@
       <code id="ca">0xD80aFe3Be875a14155FDd96D39669A6734E12036</code>
       <button class="copy-btn" id="copyBtn" type="button">Copy</button>
     </div>
+    <div class="hero-balance" id="heroBalance" hidden>
+      <div class="hero-balance-line">YOUR $BUFFCAT BALANCE IS <span id="heroBalanceAmount">0</span></div>
+      <div class="hero-balance-quip" id="heroBalanceQuip"></div>
+    </div>
     <div class="scroll-hint">Scroll — number go up, weights go up</div>
   </section>
 
@@ -109,31 +156,6 @@
       <span>ON ROBINHOOD CHAIN</span><span>FOR THE HOLDERS</span><span>ON ROBINHOOD CHAIN</span><span>FOR THE HOLDERS</span>
     </div>
   </div>
-
-  <!-- ============ 3D MODEL ============ -->
-  <section id="model3d">
-    <div class="wrap">
-      <div class="eyebrow">Meet The Mascot</div>
-      <h2 class="reveal">The <span class="up">Buff Cat</span> in 3D</h2>
-      <p class="lede reveal">Robinhood’s unofficial mascot, fully rendered. Drag to spin him yourself, or keep scrolling — he does a full victory rotation as you move down the page.</p>
-      <div class="model-shell reveal">
-        <div class="model-frame">
-          <iframe title="Stylized Buff Cat" id="buffcat-embed" frameborder="0"
-            allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"
-            allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking
-            execution-while-out-of-viewport execution-while-not-rendered web-share
-            src="https://sketchfab.com/models/f3189f1795874cadb6820e1d2b29a6d2/embed"></iframe>
-        </div>
-        <p class="model-credit">
-          <a href="https://sketchfab.com/3d-models/stylized-buff-cat-f3189f1795874cadb6820e1d2b29a6d2?utm_medium=embed&utm_campaign=share-popup&utm_content=f3189f1795874cadb6820e1d2b29a6d2" target="_blank" rel="nofollow noopener">Stylized Buff Cat</a>
-          by
-          <a href="https://sketchfab.com/acot_meansonecupoftea?utm_medium=embed&utm_campaign=share-popup&utm_content=f3189f1795874cadb6820e1d2b29a6d2" target="_blank" rel="nofollow noopener">acot_meansonecupoftea</a>
-          on
-          <a href="https://sketchfab.com?utm_medium=embed&utm_campaign=share-popup&utm_content=f3189f1795874cadb6820e1d2b29a6d2" target="_blank" rel="nofollow noopener">Sketchfab</a>
-        </p>
-      </div>
-    </div>
-  </section>
 
   <!-- ============ ABOUT ============ -->
   <section id="about">
@@ -503,7 +525,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js" type="application/javascript"></script>
 <script src="buffcat-robinhood.js?v=20260713a"></script>
 </body>
