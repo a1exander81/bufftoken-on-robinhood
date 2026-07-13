@@ -390,7 +390,7 @@
   });
 
   gsap.from('#hero h1 .line-inner', {yPercent:110, duration:1.15, ease:'power4.out', stagger:0.14, delay:0.15});
-  gsap.from('.hero-tag, .hero-sub, .hero-ctas, #hero .ca-bar', {opacity:0, y:26, duration:0.9, ease:'power3.out', stagger:0.11, delay:0.5});
+  gsap.from('.hero-tag, .hero-tagline, .hero-sub, .hero-ctas, #hero .ca-bar', {opacity:0, y:26, duration:0.9, ease:'power3.out', stagger:0.11, delay:0.5});
 
   gsap.to('#hero', {
     scrollTrigger:{trigger:'#hero', start:'top top', end:'bottom top', scrub:true},

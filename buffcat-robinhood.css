@@ -191,9 +191,15 @@
   .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);animation:pulse 1.6s ease-in-out infinite}
   @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
   #hero h1{font-size:clamp(38px,8.2vw,116px);color:var(--text)}
-  #hero h1 .line{display:block;overflow:hidden}
+  #hero h1 .line{display:block;overflow:hidden;padding:.18em .6em;margin:-.18em -.6em}
   #hero h1 .line-inner{display:inline-block}
   #hero h1 .up{color:var(--green);text-shadow:0 0 60px rgba(0,200,5,.45)}
+  .hero-tagline{
+    margin-top:18px;
+    font-family:'Fredoka','Unbounded',sans-serif;font-weight:600;
+    font-size:clamp(18px,2.6vw,32px);letter-spacing:.02em;color:var(--text);
+  }
+  .hero-tagline span{color:var(--gold);text-shadow:0 0 30px rgba(232,179,60,.35)}
   .hero-sub{margin-top:28px;font-size:clamp(16px,1.6vw,20px);color:var(--dim);max-width:54ch;font-weight:300}
   .hero-sub b{color:var(--green-soft);font-weight:600}
   .hero-ctas{display:flex;gap:14px;margin-top:38px;flex-wrap:wrap;justify-content:center}
