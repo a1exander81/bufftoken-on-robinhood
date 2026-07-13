@@ -4,7 +4,7 @@
   // ---------------------------------------------------------------------
   // Config — fill MINER_ADDRESS in after running contracts/scripts/deploy.js
   // ---------------------------------------------------------------------
-  const BUFFCAT_TOKEN_ADDRESS = "0x00aF23339838240bA3bb42E424936B521d31041f";
+  const BUFFCAT_TOKEN_ADDRESS = "0xD80aFe3Be875a14155FDd96D39669A6734E12036";
   const MINER_ADDRESS = "0xE88403a8981933fFCe41085513Ae7dd7F78d37C1";
   const ROBINHOOD_CHAIN_ID = "0x1237";
   const ROBINHOOD_CHAIN_PARAMS = {
