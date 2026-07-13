@@ -7,8 +7,8 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-/// @title NeiroMiner
-/// @notice Lock $NEIRO into a chosen tier ("buy miners") and earn a share of a
+/// @title BuffCatMiner
+/// @notice Lock $BUFFCAT into a chosen tier ("buy miners") and earn a share of a
 ///         capped, owner-funded reward stream. Yield is bounded by tokens the
 ///         contract actually holds — it is never funded by other users' deposits.
 ///
@@ -25,7 +25,7 @@ import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step
 /// - Buy/claim pull amounts are measured by actual balance delta, not the
 ///   requested amount, so a fee-on-transfer or deflationary token behavior
 ///   never desyncs internal accounting from real holdings.
-contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
+contract BuffCatMiner is ReentrancyGuard, Pausable, Ownable2Step {
     using SafeERC20 for IERC20;
 
     // ---------------------------------------------------------------------
@@ -40,7 +40,7 @@ contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
     }
 
     struct Position {
-        uint256 principal; // net NEIRO locked (post buy-fee)
+        uint256 principal; // net BUFFCAT locked (post buy-fee)
         uint256 hashpower; // principal * tier multiplier, drives reward share
         uint64 unlockTime;
         Tier tier;
@@ -51,7 +51,7 @@ contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
     // Immutable configuration
     // ---------------------------------------------------------------------
 
-    IERC20 public immutable neiro;
+    IERC20 public immutable buffcat;
     address public immutable lpWallet;
     address public immutable ownerFeeWallet;
     address public immutable ecoWallet;
@@ -73,13 +73,13 @@ contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
     // Reward stream state (Synthetix-style accumulator)
     // ---------------------------------------------------------------------
 
-    uint256 public rewardRate; // NEIRO per second
+    uint256 public rewardRate; // BUFFCAT per second
     uint256 public rewardPeriodFinish;
     uint256 public lastUpdateTime;
     uint256 public rewardPerHashpowerStored; // scaled by 1e18
 
     mapping(address => uint256) public userRewardPerHashpowerPaid;
-    mapping(address => uint256) public rewards; // accrued, unclaimed NEIRO (gross, pre-fee)
+    mapping(address => uint256) public rewards; // accrued, unclaimed BUFFCAT (gross, pre-fee)
     mapping(address => uint256) public userHashpower;
 
     uint256 public totalHashpower;
@@ -110,13 +110,13 @@ contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
     event RewardFunded(address indexed funder, uint256 amount, uint256 duration, uint256 newRate);
     event EarlyExitBonusInjected(uint256 amount, uint256 newRate, uint256 newFinish);
 
-    constructor(address neiroToken, address lpWallet_, address ownerFeeWallet_, address ecoWallet_, address admin)
+    constructor(address buffcatToken, address lpWallet_, address ownerFeeWallet_, address ecoWallet_, address admin)
         Ownable(admin)
     {
-        require(neiroToken != address(0), "neiro=0");
+        require(buffcatToken != address(0), "buffcat=0");
         require(lpWallet_ != address(0) && ownerFeeWallet_ != address(0) && ecoWallet_ != address(0), "wallet=0");
         require(admin != address(0), "admin=0");
-        neiro = IERC20(neiroToken);
+        buffcat = IERC20(buffcatToken);
         lpWallet = lpWallet_;
         ownerFeeWallet = ownerFeeWallet_;
         ecoWallet = ecoWallet_;
@@ -158,9 +158,9 @@ contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
     function buyMiners(uint256 amount, Tier tier) external nonReentrant whenNotPaused updateReward(msg.sender) {
         require(amount > 0, "amount=0");
 
-        uint256 balBefore = neiro.balanceOf(address(this));
-        neiro.safeTransferFrom(msg.sender, address(this), amount);
-        uint256 received = neiro.balanceOf(address(this)) - balBefore;
+        uint256 balBefore = buffcat.balanceOf(address(this));
+        buffcat.safeTransferFrom(msg.sender, address(this), amount);
+        uint256 received = buffcat.balanceOf(address(this)) - balBefore;
         require(received > 0, "nothing received");
 
         uint256 fee = (received * BUY_FEE_BPS) / BPS_DENOM;
@@ -194,7 +194,7 @@ contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
         uint256 net = reward - fee;
         _distributeFee(fee);
 
-        neiro.safeTransfer(msg.sender, net);
+        buffcat.safeTransfer(msg.sender, net);
         emit DividendsClaimed(msg.sender, reward, fee, net);
     }
 
@@ -227,12 +227,12 @@ contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
                 } else {
                     // No active stakers left to receive it — do not strand funds in
                     // the stream; route to the eco wallet instead.
-                    neiro.safeTransfer(ecoWallet, poolBonus);
+                    buffcat.safeTransfer(ecoWallet, poolBonus);
                 }
             }
         }
 
-        neiro.safeTransfer(msg.sender, payout);
+        buffcat.safeTransfer(msg.sender, payout);
         emit Unstaked(msg.sender, positionId, principal, fee, payout, early);
     }
 
@@ -253,9 +253,9 @@ contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
         require(amount > 0, "amount=0");
         require(duration > 0 && duration <= MAX_REWARD_DURATION, "bad duration");
 
-        uint256 balBefore = neiro.balanceOf(address(this));
-        neiro.safeTransferFrom(msg.sender, address(this), amount);
-        uint256 received = neiro.balanceOf(address(this)) - balBefore;
+        uint256 balBefore = buffcat.balanceOf(address(this));
+        buffcat.safeTransferFrom(msg.sender, address(this), amount);
+        uint256 received = buffcat.balanceOf(address(this)) - balBefore;
         require(received > 0, "nothing received");
         totalRewardFunded += received;
 
@@ -267,7 +267,7 @@ contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
             rewardRate = (leftover + received) / duration;
         }
 
-        uint256 freeBalance = neiro.balanceOf(address(this)) - totalPrincipalLocked;
+        uint256 freeBalance = buffcat.balanceOf(address(this)) - totalPrincipalLocked;
         require(rewardRate * duration <= freeBalance, "insufficient funding for rate");
 
         lastUpdateTime = block.timestamp;
@@ -291,9 +291,9 @@ contract NeiroMiner is ReentrancyGuard, Pausable, Ownable2Step {
         if (fee == 0) return;
         uint256 each = fee / 3;
         uint256 remainder = fee - each * 3; // dust from integer division goes to eco wallet
-        neiro.safeTransfer(lpWallet, each);
-        neiro.safeTransfer(ownerFeeWallet, each);
-        neiro.safeTransfer(ecoWallet, each + remainder);
+        buffcat.safeTransfer(lpWallet, each);
+        buffcat.safeTransfer(ownerFeeWallet, each);
+        buffcat.safeTransfer(ecoWallet, each + remainder);
     }
 
     function _injectEarlyExitBonus(uint256 bonusAmount) internal {

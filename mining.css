@@ -1,4 +1,4 @@
-/* Mining dashboard — builds on the shared tokens defined in neiro-robinhood.css */
+/* Mining dashboard — builds on the shared tokens defined in buffcat-robinhood.css */
 
 /* This page has no hamburger toggle (mining.js doesn't load the home page's
    nav-toggle script), so keep nav links visible instead of inheriting the

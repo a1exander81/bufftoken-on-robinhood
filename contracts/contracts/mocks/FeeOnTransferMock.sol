@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-/// @notice Token that burns 2% on every transfer, used to prove NeiroMiner's
+/// @notice Token that burns 2% on every transfer, used to prove BuffCatMiner's
 ///         balance-delta accounting stays solvent even against non-standard
 ///         tokens (it never trusts the requested `amount`, only what it
 ///         actually received).

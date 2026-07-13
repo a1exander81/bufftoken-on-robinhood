@@ -16,12 +16,12 @@ const ONE = 10n ** 18n;
 async function deployFixture() {
   const [deployer, lpWallet, ownerFeeWallet, ecoWallet, admin, alice, bob, carol] = await ethers.getSigners();
 
-  const MockNeiro = await ethers.getContractFactory("MockNeiro");
-  const neiro = await MockNeiro.deploy();
+  const MockBuffCat = await ethers.getContractFactory("MockBuffCat");
+  const buffcat = await MockBuffCat.deploy();
 
-  const NeiroMiner = await ethers.getContractFactory("NeiroMiner");
-  const miner = await NeiroMiner.deploy(
-    await neiro.getAddress(),
+  const BuffCatMiner = await ethers.getContractFactory("BuffCatMiner");
+  const miner = await BuffCatMiner.deploy(
+    await buffcat.getAddress(),
     lpWallet.address,
     ownerFeeWallet.address,
     ecoWallet.address,
@@ -29,16 +29,16 @@ async function deployFixture() {
   );
 
   for (const user of [alice, bob, carol, admin]) {
-    await neiro.mint(user.address, 1_000_000n * ONE);
-    await neiro.connect(user).approve(await miner.getAddress(), ethers.MaxUint256);
+    await buffcat.mint(user.address, 1_000_000n * ONE);
+    await buffcat.connect(user).approve(await miner.getAddress(), ethers.MaxUint256);
   }
 
-  return { deployer, lpWallet, ownerFeeWallet, ecoWallet, admin, alice, bob, carol, neiro, miner };
+  return { deployer, lpWallet, ownerFeeWallet, ecoWallet, admin, alice, bob, carol, buffcat, miner };
 }
 
 async function fundRewards(ctx, amount, duration) {
   const { miner, admin } = ctx;
-  await ctx.neiro.connect(admin).approve(await miner.getAddress(), amount);
+  await ctx.buffcat.connect(admin).approve(await miner.getAddress(), amount);
   await miner.connect(admin).notifyRewardAmount(amount, duration);
 }
 
@@ -49,22 +49,22 @@ function buyFeeSplit(grossAmount) {
   return { fee, principal, each };
 }
 
-describe("NeiroMiner", function () {
+describe("BuffCatMiner", function () {
   describe("deployment", function () {
     it("stores immutable config and rejects zero addresses", async function () {
       const ctx = await deployFixture();
-      expect(await ctx.miner.neiro()).to.equal(await ctx.neiro.getAddress());
+      expect(await ctx.miner.buffcat()).to.equal(await ctx.buffcat.getAddress());
       expect(await ctx.miner.lpWallet()).to.equal(ctx.lpWallet.address);
       expect(await ctx.miner.ownerFeeWallet()).to.equal(ctx.ownerFeeWallet.address);
       expect(await ctx.miner.ecoWallet()).to.equal(ctx.ecoWallet.address);
       expect(await ctx.miner.owner()).to.equal(ctx.admin.address);
 
-      const NeiroMiner = await ethers.getContractFactory("NeiroMiner");
+      const BuffCatMiner = await ethers.getContractFactory("BuffCatMiner");
       await expect(
-        NeiroMiner.deploy(ethers.ZeroAddress, ctx.lpWallet.address, ctx.ownerFeeWallet.address, ctx.ecoWallet.address, ctx.admin.address)
-      ).to.be.revertedWith("neiro=0");
+        BuffCatMiner.deploy(ethers.ZeroAddress, ctx.lpWallet.address, ctx.ownerFeeWallet.address, ctx.ecoWallet.address, ctx.admin.address)
+      ).to.be.revertedWith("buffcat=0");
       await expect(
-        NeiroMiner.deploy(await ctx.neiro.getAddress(), ethers.ZeroAddress, ctx.ownerFeeWallet.address, ctx.ecoWallet.address, ctx.admin.address)
+        BuffCatMiner.deploy(await ctx.buffcat.getAddress(), ethers.ZeroAddress, ctx.ownerFeeWallet.address, ctx.ecoWallet.address, ctx.admin.address)
       ).to.be.revertedWith("wallet=0");
     });
   });
@@ -72,20 +72,20 @@ describe("NeiroMiner", function () {
   describe("buyMiners", function () {
     it("takes a 3% fee split 1/1/1 across LP/owner/eco and locks the rest as principal", async function () {
       const ctx = await deployFixture();
-      const { miner, neiro, alice, lpWallet, ownerFeeWallet, ecoWallet } = ctx;
+      const { miner, buffcat, alice, lpWallet, ownerFeeWallet, ecoWallet } = ctx;
       const amount = 10_000n * ONE;
       const { fee, principal, each } = buyFeeSplit(amount);
 
-      const lpBefore = await neiro.balanceOf(lpWallet.address);
-      const ownerBefore = await neiro.balanceOf(ownerFeeWallet.address);
-      const ecoBefore = await neiro.balanceOf(ecoWallet.address);
+      const lpBefore = await buffcat.balanceOf(lpWallet.address);
+      const ownerBefore = await buffcat.balanceOf(ownerFeeWallet.address);
+      const ecoBefore = await buffcat.balanceOf(ecoWallet.address);
 
       await expect(miner.connect(alice).buyMiners(amount, TIER.DAY))
         .to.emit(miner, "MinerPurchased");
 
-      expect((await neiro.balanceOf(lpWallet.address)) - lpBefore).to.equal(each);
-      expect((await neiro.balanceOf(ownerFeeWallet.address)) - ownerBefore).to.equal(each);
-      expect((await neiro.balanceOf(ecoWallet.address)) - ecoBefore).to.equal(each + (fee - each * 3n));
+      expect((await buffcat.balanceOf(lpWallet.address)) - lpBefore).to.equal(each);
+      expect((await buffcat.balanceOf(ownerFeeWallet.address)) - ownerBefore).to.equal(each);
+      expect((await buffcat.balanceOf(ecoWallet.address)) - ecoBefore).to.equal(each + (fee - each * 3n));
 
       const pos = await miner.positions(alice.address, 0);
       expect(pos.principal).to.equal(principal);
@@ -130,8 +130,8 @@ describe("NeiroMiner", function () {
       const [deployer, lpWallet, ownerFeeWallet, ecoWallet, admin, alice] = await ethers.getSigners();
       const FOT = await ethers.getContractFactory("FeeOnTransferMock");
       const fot = await FOT.deploy();
-      const NeiroMiner = await ethers.getContractFactory("NeiroMiner");
-      const miner = await NeiroMiner.deploy(await fot.getAddress(), lpWallet.address, ownerFeeWallet.address, ecoWallet.address, admin.address);
+      const BuffCatMiner = await ethers.getContractFactory("BuffCatMiner");
+      const miner = await BuffCatMiner.deploy(await fot.getAddress(), lpWallet.address, ownerFeeWallet.address, ecoWallet.address, admin.address);
 
       await fot.mint(alice.address, 10_000n * ONE);
       await fot.connect(alice).approve(await miner.getAddress(), ethers.MaxUint256);
@@ -152,7 +152,7 @@ describe("NeiroMiner", function () {
   describe("reward accrual + claimDividends", function () {
     it("distributes rewards proportional to hashpower share and applies the 3% claim fee", async function () {
       const ctx = await deployFixture();
-      const { miner, neiro, alice, bob, lpWallet, ownerFeeWallet, ecoWallet } = ctx;
+      const { miner, buffcat, alice, bob, lpWallet, ownerFeeWallet, ecoWallet } = ctx;
 
       // Equal principal, but bob picks a 2x tier multiplier (MONTH) vs alice's 1x (DAY).
       await miner.connect(alice).buyMiners(10_000n * ONE, TIER.DAY);
@@ -171,20 +171,20 @@ describe("NeiroMiner", function () {
       const ratio = (bobEarned * 1000n) / aliceEarned;
       expect(ratio).to.be.closeTo(2000n, 5n);
 
-      const aliceNeiroBefore = await neiro.balanceOf(alice.address);
-      const lpBefore = await neiro.balanceOf(lpWallet.address);
+      const aliceBuffCatBefore = await buffcat.balanceOf(alice.address);
+      const lpBefore = await buffcat.balanceOf(lpWallet.address);
 
       await miner.connect(alice).claimDividends();
 
       const claimedGross = aliceEarned; // approx, accrues a bit more this block
-      const aliceNeiroAfter = await neiro.balanceOf(alice.address);
-      expect(aliceNeiroAfter).to.be.gt(aliceNeiroBefore);
+      const aliceBuffCatAfter = await buffcat.balanceOf(alice.address);
+      expect(aliceBuffCatAfter).to.be.gt(aliceBuffCatBefore);
 
-      const lpAfter = await neiro.balanceOf(lpWallet.address);
+      const lpAfter = await buffcat.balanceOf(lpWallet.address);
       expect(lpAfter).to.be.gt(lpBefore);
 
       // Net received should be ~97% of gross earned at claim time.
-      const netReceived = aliceNeiroAfter - aliceNeiroBefore;
+      const netReceived = aliceBuffCatAfter - aliceBuffCatBefore;
       expect(netReceived).to.be.closeTo((claimedGross * 9700n) / 10000n, (claimedGross * 2n) / 100n);
     });
 
@@ -197,23 +197,23 @@ describe("NeiroMiner", function () {
   describe("unstake", function () {
     it("returns full principal with no fee once matured", async function () {
       const ctx = await deployFixture();
-      const { miner, neiro, alice } = ctx;
+      const { miner, buffcat, alice } = ctx;
       const amount = 5_000n * ONE;
       await miner.connect(alice).buyMiners(amount, TIER.DAY);
       const pos = await miner.positions(alice.address, 0);
 
       await time.increase(Number(TIER_DURATION[TIER.DAY]) + 1);
 
-      const before = await neiro.balanceOf(alice.address);
+      const before = await buffcat.balanceOf(alice.address);
       await expect(miner.connect(alice).unstake(0)).to.emit(miner, "Unstaked");
-      const after = await neiro.balanceOf(alice.address);
+      const after = await buffcat.balanceOf(alice.address);
       expect(after - before).to.equal(pos.principal);
       expect(await miner.totalPrincipalLocked()).to.equal(0n);
     });
 
     it("applies a 10% early exit penalty: 3% to fee wallets, 7% into the reward stream for remaining stakers", async function () {
       const ctx = await deployFixture();
-      const { miner, neiro, alice, bob, lpWallet, ownerFeeWallet, ecoWallet } = ctx;
+      const { miner, buffcat, alice, bob, lpWallet, ownerFeeWallet, ecoWallet } = ctx;
       const amount = 10_000n * ONE;
 
       await miner.connect(alice).buyMiners(amount, TIER.MONTH);
@@ -228,9 +228,9 @@ describe("NeiroMiner", function () {
 
       const bobEarnedBefore = await miner.pendingRewards(bob.address);
 
-      const before = await neiro.balanceOf(alice.address);
+      const before = await buffcat.balanceOf(alice.address);
       await miner.connect(alice).unstake(0); // still within 30-day lock -> early
-      const after = await neiro.balanceOf(alice.address);
+      const after = await buffcat.balanceOf(alice.address);
       expect(after - before).to.equal(expectedPayout);
 
       // reward stream should now carry the 7% bonus, benefiting bob (only remaining staker)
@@ -258,8 +258,8 @@ describe("NeiroMiner", function () {
   describe("notifyRewardAmount solvency guard", function () {
     it("reverts on zero amount, zero duration, or a duration beyond the cap", async function () {
       const ctx = await deployFixture();
-      const { miner, neiro, admin } = ctx;
-      await neiro.connect(admin).approve(await miner.getAddress(), 1_000n * ONE);
+      const { miner, buffcat, admin } = ctx;
+      await buffcat.connect(admin).approve(await miner.getAddress(), 1_000n * ONE);
       await expect(miner.connect(admin).notifyRewardAmount(0, 1000)).to.be.revertedWith("amount=0");
       await expect(miner.connect(admin).notifyRewardAmount(1_000n * ONE, 0)).to.be.revertedWith("bad duration");
       const tooLong = (await miner.MAX_REWARD_DURATION()) + 1n;
@@ -268,8 +268,8 @@ describe("NeiroMiner", function () {
 
     it("only the owner can fund the reward stream", async function () {
       const ctx = await deployFixture();
-      const { miner, neiro, alice } = ctx;
-      await neiro.connect(alice).approve(await miner.getAddress(), 1_000n * ONE);
+      const { miner, buffcat, alice } = ctx;
+      await buffcat.connect(alice).approve(await miner.getAddress(), 1_000n * ONE);
       await expect(miner.connect(alice).notifyRewardAmount(1_000n * ONE, 1000)).to.be.reverted;
     });
 
@@ -277,8 +277,8 @@ describe("NeiroMiner", function () {
       const [deployer, lpWallet, ownerFeeWallet, ecoWallet, admin] = await ethers.getSigners();
       const FOT = await ethers.getContractFactory("FeeOnTransferMock");
       const fot = await FOT.deploy();
-      const NeiroMiner = await ethers.getContractFactory("NeiroMiner");
-      const miner = await NeiroMiner.deploy(await fot.getAddress(), lpWallet.address, ownerFeeWallet.address, ecoWallet.address, admin.address);
+      const BuffCatMiner = await ethers.getContractFactory("BuffCatMiner");
+      const miner = await BuffCatMiner.deploy(await fot.getAddress(), lpWallet.address, ownerFeeWallet.address, ecoWallet.address, admin.address);
 
       const requested = 100_000n * ONE;
       const received = requested - (requested * 200n) / 10_000n; // 2% tax
@@ -318,8 +318,8 @@ describe("NeiroMiner", function () {
 
       const RAT = await ethers.getContractFactory("ReentrancyAttackToken");
       const rat = await RAT.deploy();
-      const NeiroMiner = await ethers.getContractFactory("NeiroMiner");
-      const miner = await NeiroMiner.deploy(
+      const BuffCatMiner = await ethers.getContractFactory("BuffCatMiner");
+      const miner = await BuffCatMiner.deploy(
         await rat.getAddress(),
         lpWallet.address,
         ownerFeeWallet.address,
@@ -356,7 +356,7 @@ describe("NeiroMiner", function () {
       expect(await attacker.reentrancyAttempts()).to.equal(1n);
       expect(await attacker.reentrancyReverted()).to.equal(true);
 
-      // Exactly one claim's worth of net NEIRO landed — the reentrant
+      // Exactly one claim's worth of net BUFFCAT landed — the reentrant
       // second claim was blocked, not silently ignored or double-paid.
       const net = balAfter - balBefore;
       expect(net).to.be.gt(0n);
@@ -367,13 +367,13 @@ describe("NeiroMiner", function () {
   describe("gas: O(1) regardless of user count", function () {
     it("keeps buyMiners gas roughly constant as more unrelated users join", async function () {
       const ctx = await deployFixture();
-      const { miner, neiro } = ctx;
+      const { miner, buffcat } = ctx;
       const signers = await ethers.getSigners();
       const users = signers.slice(8, 8 + 12);
 
       for (const u of users) {
-        await neiro.mint(u.address, 10_000n * ONE);
-        await neiro.connect(u).approve(await miner.getAddress(), ethers.MaxUint256);
+        await buffcat.mint(u.address, 10_000n * ONE);
+        await buffcat.connect(u).approve(await miner.getAddress(), ethers.MaxUint256);
       }
 
       const gasUsed = [];
@@ -399,14 +399,14 @@ describe("NeiroMiner", function () {
   describe("solvency invariant (randomized)", function () {
     it("never lets total obligations (locked principal + earned rewards) exceed the contract's actual token balance", async function () {
       const ctx = await deployFixture();
-      const { miner, neiro, admin, alice, bob, carol } = ctx;
+      const { miner, buffcat, admin, alice, bob, carol } = ctx;
       const users = [alice, bob, carol];
       const tiers = [TIER.DAY, TIER.THREE_DAY, TIER.WEEK, TIER.MONTH];
 
       await fundRewards(ctx, 500_000n * ONE, 500_000);
 
       async function assertSolvent() {
-        const balance = await neiro.balanceOf(await miner.getAddress());
+        const balance = await buffcat.balanceOf(await miner.getAddress());
         let obligations = await miner.totalPrincipalLocked();
         for (const u of users) {
           obligations += await miner.pendingRewards(u.address);

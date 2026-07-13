@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Neiro Mining — Lock $NEIRO, Earn Dividends</title>
-  <meta name="description" content="Buy miners with $NEIRO, choose a lock tier, and earn a share of a transparent, capped reward stream on Robinhood Chain." />
-  <link rel="icon" type="image/jpeg" href="assets/neiro%20circle.jpg" />
-  <link rel="stylesheet" href="neiro-robinhood.css" />
+  <title>Buff Cat Mining — Lock $BUFFCAT, Earn Dividends</title>
+  <meta name="description" content="Buy miners with $BUFFCAT, choose a lock tier, and earn a share of a transparent, capped reward stream on Robinhood Chain." />
+  <link rel="icon" type="image/png" href="assets/buffcatcircle.png" />
+  <link rel="stylesheet" href="buffcat-robinhood.css" />
   <link rel="stylesheet" href="mining.css?v=1" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,13 +16,13 @@
   <div class="grid"></div>
 
   <nav id="nav">
-    <a class="brand" href="neiro-robinhood.html">
-      <span class="brand-mark">N</span>
-      <span class="brand-name">Neiro On <span>Robinhood</span></span>
+    <a class="brand" href="index.html">
+      <span class="brand-mark">B</span>
+      <span class="brand-name">Buff Cat On <span>Robinhood</span></span>
     </a>
     <div class="nav-links" id="navLinks">
-      <a href="neiro-robinhood.html">Home</a>
-      <a href="neiro-robinhood.html#community">Community</a>
+      <a href="index.html">Home</a>
+      <a href="index.html#community">Community</a>
       <button class="nav-cta" data-connect-wallet id="connectWallet">Connect Wallet</button>
     </div>
   </nav>
@@ -34,7 +34,7 @@
       <section class="mine-hero">
         <span class="mine-live-badge"><span class="live-dot"></span> Mining is live</span>
         <h1>Buy miners. Lock a tier. <span class="up">Earn real dividends.</span></h1>
-        <p class="lede">Every miner is $NEIRO you lock into the contract. The longer you lock it, the bigger your share of the reward stream — funded from a published, capped emission schedule, never from other users' deposits.</p>
+        <p class="lede">Every miner is $BUFFCAT you lock into the contract. The longer you lock it, the bigger your share of the reward stream — funded from a published, capped emission schedule, never from other users' deposits.</p>
 
         <div class="mine-hero-actions">
           <button class="btn btn-green" data-connect-wallet id="connectWalletHero">Connect Wallet</button>
@@ -51,19 +51,19 @@
 
         <div class="mine-banner" id="notDeployedBanner">
           <span>⚙️</span>
-          <span><strong>Preview mode.</strong> The mining contract address isn't configured in this build yet — the dashboard below is fully wired and will go live the moment <code>mining.js</code> is pointed at the deployed <code>NeiroMiner</code> address.</span>
+          <span><strong>Preview mode.</strong> The mining contract address isn't configured in this build yet — the dashboard below is fully wired and will go live the moment <code>mining.js</code> is pointed at the deployed <code>BuffCatMiner</code> address.</span>
         </div>
       </section>
 
       <!-- How it works -->
       <section class="mine-section">
         <h2>How mining works</h2>
-        <p class="section-sub">No literal hardware, no electricity bill — "mining" here means locking $NEIRO into the contract to claim a share of its reward stream. Pick your commitment, the contract handles the rest.</p>
+        <p class="section-sub">No literal hardware, no electricity bill — "mining" here means locking $BUFFCAT into the contract to claim a share of its reward stream. Pick your commitment, the contract handles the rest.</p>
         <div class="mine-steps">
           <div class="mine-step">
             <div class="num">1</div>
             <h3>Buy miners</h3>
-            <p>Spend $NEIRO to open a position. A 3% fee applies (split to liquidity/burn, the platform, and the ecosystem wallet) — the rest becomes your locked principal.</p>
+            <p>Spend $BUFFCAT to open a position. A 3% fee applies (split to liquidity/burn, the platform, and the ecosystem wallet) — the rest becomes your locked principal.</p>
           </div>
           <div class="mine-step">
             <div class="num">2</div>
@@ -109,7 +109,7 @@
           </div>
 
           <div class="mine-form-card">
-            <label for="buyAmount">Amount of $NEIRO</label>
+            <label for="buyAmount">Amount of $BUFFCAT</label>
             <div class="mine-input-row">
               <input id="buyAmount" type="number" min="0" step="any" placeholder="0.0" />
               <button id="maxBtn" type="button">MAX</button>
@@ -138,7 +138,7 @@
         <div class="mine-claim-card">
           <div>
             <div class="cc-label">Pending dividends</div>
-            <div class="cc-value" id="pendingRewards">0.0000 $NEIRO</div>
+            <div class="cc-value" id="pendingRewards">0.0000 $BUFFCAT</div>
           </div>
           <button class="btn btn-green" id="claimBtn">Connect wallet to claim</button>
         </div>
@@ -151,9 +151,9 @@
       <!-- Pairs showcase -->
       <section class="mine-section">
         <h2>What your miners are hashing</h2>
-        <p class="section-sub">The theme behind the reward stream — a curated basket the Neiro community is watching, from memes to tokenized equities landing on Robinhood Chain.</p>
+        <p class="section-sub">The theme behind the reward stream — a curated basket the Buff Cat community is watching, from memes to tokenized equities landing on Robinhood Chain.</p>
         <div class="mine-pairs">
-          <div class="mine-pair"><div class="pair-icon">N</div><div class="pair-name">$NEIRO</div><div class="pair-tag">Home base</div></div>
+          <div class="mine-pair"><div class="pair-icon">B</div><div class="pair-name">$BUFFCAT</div><div class="pair-tag">Home base</div></div>
           <div class="mine-pair"><div class="pair-icon">D</div><div class="pair-name">$DOGE</div><div class="pair-tag">Meme</div></div>
           <div class="mine-pair"><div class="pair-icon">P</div><div class="pair-name">$PEPE</div><div class="pair-tag">Meme</div></div>
           <div class="mine-pair"><div class="pair-icon">S</div><div class="pair-name">SPCX</div><div class="pair-tag">Tokenized equity</div></div>

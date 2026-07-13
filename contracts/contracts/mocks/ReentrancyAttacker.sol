@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-interface INeiroMinerForAttack {
+interface IBuffCatMinerForAttack {
     function claimDividends() external;
     function unstake(uint256 positionId) external;
     function buyMiners(uint256 amount, uint8 tier) external;
@@ -11,16 +11,16 @@ interface IERC20ForAttack {
     function approve(address spender, uint256 amount) external returns (bool);
 }
 
-/// @notice Attempts to re-enter NeiroMiner mid-payout via a hostile token
+/// @notice Attempts to re-enter BuffCatMiner mid-payout via a hostile token
 ///         hook. Used only in tests to prove ReentrancyGuard blocks it.
 contract ReentrancyAttacker {
-    INeiroMinerForAttack public immutable miner;
+    IBuffCatMinerForAttack public immutable miner;
     IERC20ForAttack public immutable token;
     uint256 public reentrancyAttempts;
     bool public reentrancyReverted;
 
     constructor(address minerAddress, address tokenAddress) {
-        miner = INeiroMinerForAttack(minerAddress);
+        miner = IBuffCatMinerForAttack(minerAddress);
         token = IERC20ForAttack(tokenAddress);
     }
 

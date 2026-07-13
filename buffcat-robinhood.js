@@ -43,9 +43,9 @@
 
   function setDisconnectedState(){
     if(walletAddressEl) walletAddressEl.textContent = 'Not connected';
-    if(walletBalanceEl) walletBalanceEl.textContent = '0.0000 $NEIRO';
+    if(walletBalanceEl) walletBalanceEl.textContent = '0.0000 $BUFFCAT';
     if(walletRoleEl) walletRoleEl.textContent = 'Read-only';
-    setWalletMessage('Connect your wallet to see your $NEIRO balance and the equivalent USDT value.');
+    setWalletMessage('Connect your wallet to see your $BUFFCAT balance and the equivalent USDT value.');
   }
 
   async function formatBalance(balance, decimals){
@@ -84,7 +84,7 @@
     try{
       const chainReady = await ensureRobinhoodChain();
       if(!chainReady){
-        setWalletMessage('Switch to Robinhood Chain in your wallet to read your $NEIRO balance.');
+        setWalletMessage('Switch to Robinhood Chain in your wallet to read your $BUFFCAT balance.');
         return;
       }
       const network = await provider.getNetwork();
@@ -92,16 +92,16 @@
       const contract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, provider);
       const [decimals, rawBalance] = await Promise.all([contract.decimals(), contract.balanceOf(await signer.getAddress())]);
       if(walletBalanceEl){
-        walletBalanceEl.textContent = (await formatBalance(rawBalance, decimals)) + ' $NEIRO';
+        walletBalanceEl.textContent = (await formatBalance(rawBalance, decimals)) + ' $BUFFCAT';
       }
       if(isOwner){
         setWalletMessage('Owner access granted. Admin controls will be available here for owner-only actions.');
       } else {
-        setWalletMessage('Connected on ' + chainName + '. Your $NEIRO balance is visible for bot-traded holdings as well.');
+        setWalletMessage('Connected on ' + chainName + '. Your $BUFFCAT balance is visible for bot-traded holdings as well.');
       }
     }catch(err){
       if(walletBalanceEl){
-        walletBalanceEl.textContent = '0.0000 $NEIRO';
+        walletBalanceEl.textContent = '0.0000 $BUFFCAT';
       }
       setWalletMessage('Unable to read token balance on this network. Switch to Robinhood Chain.');
       console.error('Balance read error', err);

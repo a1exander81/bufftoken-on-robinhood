@@ -1,4 +1,4 @@
-# NeiroMiner contracts
+# BuffCatMiner contracts
 
 ## Setup
 
@@ -25,12 +25,12 @@ npx hardhat run scripts/deploy.js --network robinhoodChain
 
 `scripts/deploy.js` defaults the token/fee-wallet addresses to the ones
 already in use on the live site. Override any of them with
-`NEIRO_TOKEN_ADDRESS`, `LP_WALLET_ADDRESS`, `OWNER_FEE_WALLET_ADDRESS`,
+`BUFFCAT_TOKEN_ADDRESS`, `LP_WALLET_ADDRESS`, `OWNER_FEE_WALLET_ADDRESS`,
 `ECO_WALLET_ADDRESS` if they ever change.
 
 After deploying:
 1. Verify the contract on the Robinhood Chain explorer.
-2. As the admin wallet, `approve` NEIRO to the contract and call
+2. As the admin wallet, `approve` BUFFCAT to the contract and call
    `notifyRewardAmount(amount, durationSeconds)` to open the first reward
    stream — the dashboard shows "No active stream" until this happens.
 3. Put the deployed address into `MINER_ADDRESS` at the top of `mining.js`
@@ -40,7 +40,7 @@ After deploying:
 ## Design notes / assumptions made
 
 - **"1% goes to LP then burn"**: the contract sends that 1% directly to the
-  given LP wallet as plain NEIRO. It does not perform an on-chain
+  given LP wallet as plain BUFFCAT. It does not perform an on-chain
   swap-and-add-liquidity-then-burn-the-LP-token sequence — that pattern
   (popularized by SafeMoon-style tokens) depends on trusting a DEX router at
   transaction time and is a well-documented source of sandwich/MEV and

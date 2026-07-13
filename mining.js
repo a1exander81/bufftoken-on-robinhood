@@ -4,7 +4,7 @@
   // ---------------------------------------------------------------------
   // Config — fill MINER_ADDRESS in after running contracts/scripts/deploy.js
   // ---------------------------------------------------------------------
-  const NEIRO_TOKEN_ADDRESS = "0x00aF23339838240bA3bb42E424936B521d31041f";
+  const BUFFCAT_TOKEN_ADDRESS = "0x00aF23339838240bA3bb42E424936B521d31041f";
   const MINER_ADDRESS = "0xE88403a8981933fFCe41085513Ae7dd7F78d37C1";
   const ROBINHOOD_CHAIN_ID = "0x1237";
   const ROBINHOOD_CHAIN_PARAMS = {
@@ -139,7 +139,7 @@
     return new ethers.Contract(MINER_ADDRESS, MINER_ABI, withSigner ? signer : provider);
   }
   function tokenContract(withSigner) {
-    return new ethers.Contract(NEIRO_TOKEN_ADDRESS, TOKEN_ABI, withSigner ? signer : provider);
+    return new ethers.Contract(BUFFCAT_TOKEN_ADDRESS, TOKEN_ABI, withSigner ? signer : provider);
   }
 
   // ---------------------------------------------------------------------
@@ -255,12 +255,12 @@
     if (!userAddress || !hasContract) {
       claimBtn.textContent = userAddress ? "Mining contract coming soon" : "Connect wallet to claim";
       claimBtn.disabled = !userAddress ? false : true;
-      el("pendingRewards").textContent = "0.0000 $NEIRO";
+      el("pendingRewards").textContent = "0.0000 $BUFFCAT";
       return;
     }
     try {
       const pending = await minerContract(false).pendingRewards(userAddress);
-      el("pendingRewards").textContent = `${fmt(pending)} $NEIRO`;
+      el("pendingRewards").textContent = `${fmt(pending)} $BUFFCAT`;
       claimBtn.disabled = pending.isZero();
       claimBtn.textContent = pending.isZero() ? "Nothing to claim" : `Claim (−3% fee)`;
     } catch (err) {
@@ -328,7 +328,7 @@
         rows.push(`
           <div class="mine-position">
             <div class="pp-main">
-              <div class="pp-amount">${fmt(pos.principal)} $NEIRO</div>
+              <div class="pp-amount">${fmt(pos.principal)} $BUFFCAT</div>
               <div class="pp-meta">${TIER_LABELS[pos.tier]} · hashpower ${fmt(pos.hashpower)} · ${countdown(unlockTime)}</div>
             </div>
             <div class="pp-status ${matured ? "matured" : "locked"}">${matured ? "Matured" : "Locked"}</div>
@@ -386,11 +386,11 @@
         miner.rewardRate(),
         miner.rewardPeriodFinish(),
       ]);
-      el("statTVL").textContent = `${fmt(tvl)} $NEIRO`;
+      el("statTVL").textContent = `${fmt(tvl)} $BUFFCAT`;
       el("statHashpower").textContent = fmt(hashpower);
       const finishNum = finish.toNumber ? finish.toNumber() : Number(finish);
       const active = finishNum > Math.floor(Date.now() / 1000);
-      el("statRewardRate").textContent = active ? `${fmt(rate.mul(86400))} $NEIRO/day` : "No active stream";
+      el("statRewardRate").textContent = active ? `${fmt(rate.mul(86400))} $BUFFCAT/day` : "No active stream";
     } catch (err) {
       console.error("refreshStats failed", err);
     }
@@ -401,7 +401,7 @@
       try {
         tokenDecimals = await tokenContract(false).decimals();
         const bal = await tokenContract(false).balanceOf(userAddress);
-        el("statWallet").textContent = `${formatAddress(userAddress)} · ${fmt(bal)} $NEIRO`;
+        el("statWallet").textContent = `${formatAddress(userAddress)} · ${fmt(bal)} $BUFFCAT`;
       } catch (e) {
         /* ignore */
       }

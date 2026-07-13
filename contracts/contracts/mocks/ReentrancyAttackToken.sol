@@ -9,8 +9,8 @@ interface IReentrancyHook {
 
 /// @notice Hostile ERC20 that calls back into an attacker contract on every
 ///         outbound transfer, simulating a hook-bearing token (e.g. ERC777)
-///         so NeiroMiner's ReentrancyGuard can be proven effective even
-///         though real $NEIRO is a plain ERC20 with no such hook.
+///         so BuffCatMiner's ReentrancyGuard can be proven effective even
+///         though real $BUFFCAT is a plain ERC20 with no such hook.
 contract ReentrancyAttackToken is ERC20 {
     address public hookTarget;
     bool public armed;
