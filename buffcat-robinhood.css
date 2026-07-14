@@ -84,7 +84,7 @@
   .grid{
     position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.35;
     background-image:
-      linear-gradient(rgba(0,200,5,.05) 1px, transparent 1px),
+      linear-gradient(rgba(0, 200, 7, 0) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0,200,5,.05) 1px, transparent 1px);
     background-size:64px 64px;
   }
