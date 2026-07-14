@@ -516,3 +516,18 @@
     .reveal{opacity:1;transform:none}
     html{scroll-behavior:auto}
   }
+
+/* ---------- Hero legibility pass ---------- */
+#hero .hero-tagline,
+#hero .hero-sub{
+  position:relative;
+  text-shadow:0 2px 14px rgba(3,9,6,.92), 0 0 3px rgba(3,9,6,.85);
+}
+#hero .hero-tagline{font-weight:700}
+#hero .hero-sub{color:#CDDAD2;font-weight:400}
+#hero .hero-sub b{color:#5AF08A;font-weight:700}
+#hero h1{-webkit-text-stroke:2px rgba(3,9,6,.95)}
+#hero .ca-bar{background:rgba(6,10,8,.92)}
+#hero .ca-bar code{color:#FFD97A}
+#hero .hero-image{opacity:.2}
+.floater{opacity:.07}
