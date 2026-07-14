@@ -19,7 +19,7 @@
   };
 
   const BPS_DENOM = 10000;
-  const BUY_FEE_BPS = 300;
+  const BUY_FEE_BPS = 200; // 1% LP + 1% eco; platform fee is a fixed ETH amount read from the contract
   const WITHDRAW_FEE_BPS = 300;
   const EARLY_EXIT_FEE_BPS = 1000;
   const TIER_LABELS = ["24 Hours", "3 Days", "1 Week", "1 Month"];
@@ -27,7 +27,8 @@
   const TIER_MULT_BPS = [10000, 12000, 15000, 20000];
 
   const MINER_ABI = [
-    "function buyMiners(uint256 amount, uint8 tier)",
+    "function buyMiners(uint256 amount, uint8 tier) payable",
+    "function buyFeeEth() view returns (uint256)",
     "function claimDividends()",
     "function unstake(uint256 positionId)",
     "function positions(address,uint256) view returns (uint256 principal, uint256 hashpower, uint64 unlockTime, uint8 tier, bool active)",
@@ -163,14 +164,14 @@
     const raw = parseFloat(amountInput.value || "0");
     const amount = isFinite(raw) && raw > 0 ? raw : 0;
     const fee = (amount * BUY_FEE_BPS) / BPS_DENOM;
-    const each = fee / 3;
+    const half = fee / 2;
     const principal = amount - fee;
     const hashpower = (principal * TIER_MULT_BPS[selectedTier]) / BPS_DENOM;
 
     el("bdFee").textContent = fee.toFixed(4);
-    el("bdLp").textContent = each.toFixed(4);
-    el("bdOwner").textContent = each.toFixed(4);
-    el("bdEco").textContent = each.toFixed(4);
+    el("bdLp").textContent = half.toFixed(4);
+    el("bdOwner").textContent = "fixed ETH fee";
+    el("bdEco").textContent = half.toFixed(4);
     el("bdPrincipal").textContent = principal.toFixed(4);
     el("bdHashpower").textContent = hashpower.toFixed(4);
   }
@@ -236,7 +237,8 @@
         }
         buyBtn.textContent = "Confirm in wallet…";
         const miner = minerContract(true);
-        const tx2 = await miner.buyMiners(amountWei, selectedTier);
+        const ethFee = await minerContract(false).buyFeeEth();
+        const tx2 = await miner.buyMiners(amountWei, selectedTier, { value: ethFee });
         buyBtn.textContent = "Buying…";
         await tx2.wait();
         amountInput.value = "";

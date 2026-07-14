@@ -30,8 +30,14 @@ a share of its reward stream. The longer you lock, the bigger your share.
 
 3. Approve the token (first time only), then confirm the buy.
 
-A **3% fee** is taken when you buy (1% liquidity / 1% platform / 1% ecosystem).
-The other 97% becomes your locked principal — you get it back when you unstake.
+Two small fees are taken when you buy:
+- a **2% token fee** (1% liquidity / 1% ecosystem), and
+- a **fixed ETH platform fee** (shown in your wallet at confirmation). Half of
+  it sustains the project; the other half accrues in an on-contract reserve
+  that the contract itself releases to the liquidity wallet on a fixed rule.
+
+The other 98% of your tokens becomes your locked principal — you get it back
+when you unstake.
 Your **mining power** = principal × tier multiplier. Rewards are split among
 all miners in proportion to mining power, so a Month lock earns twice as fast
 as a Day lock of the same size.
