@@ -32,8 +32,10 @@ async function main() {
   const Token = await ethers.getContractFactory("MockBuffCat");
   const token = await Token.deploy();
   const Miner = await ethers.getContractFactory("BuffCatMiner");
+  const BUY_FEE_ETH = ethers.parseEther("0.0005");
   const miner = await Miner.deploy(
-    await token.getAddress(), lpWallet.address, ownerFeeWallet.address, ecoWallet.address, admin.address
+    await token.getAddress(), lpWallet.address, ownerFeeWallet.address, ecoWallet.address, admin.address,
+    BUY_FEE_ETH, ethers.parseEther("0.25"), 7n * 86400n
   );
   console.log(`\n📜 MockBuffCat  deployed: ${await token.getAddress()}`);
   console.log(`📜 BuffCatMiner deployed: ${await miner.getAddress()}`);
@@ -68,10 +70,10 @@ async function main() {
   for (const [user, name, amount, tier, tierName] of buys) {
     const wei = ethers.parseEther(amount);
     await token.connect(user).approve(await miner.getAddress(), wei);
-    await miner.connect(user).buyMiners(wei, tier);
+    await miner.connect(user).buyMiners(wei, tier, { value: BUY_FEE_ETH });
     const pos = await miner.positions(user.address, 0);
     console.log(`\n⛏️  ${name} locks ${Number(amount).toLocaleString()} $BUFFCAT in tier ${tierName}`);
-    console.log(`    3% buy fee: ${fmt(wei * 300n / 10000n)}  →  principal locked: ${fmt(pos.principal)}`);
+    console.log(`    2% token fee: ${fmt(wei * 200n / 10000n)} + 0.0005 ETH  →  principal locked: ${fmt(pos.principal)}`);
     console.log(`    hashpower: ${fmt(pos.hashpower)}`);
   }
   console.log(`\n📊 totals — TVL: ${fmt(await miner.totalPrincipalLocked())} | hashpower: ${fmt(await miner.totalHashpower())}`);
@@ -158,6 +160,14 @@ async function main() {
   const bal = await token.balanceOf(await miner.getAddress());
   const owed = await miner.totalPrincipalLocked();
   console.log(`\n   ✅ solvency: contract holds ${fmt(bal)} ≥ ${fmt(owed)} still owed as principal`);
+
+  console.log("\n   — ETH fee ledger —");
+  console.log(`   platform ETH accrued : ${ethers.formatEther(await miner.platformEthAccrued())} ETH`);
+  console.log(`   LP ETH reserve       : ${ethers.formatEther(await miner.lpEthReserve())} ETH`);
+  await miner.withdrawPlatformEth();
+  console.log(`   → withdrawPlatformEth(): platform wallet paid ${ethers.formatEther(await miner.totalPlatformEthPaid())} ETH`);
+  await miner.releaseLpEth(); // interval satisfied after 31 simulated days
+  console.log(`   → releaseLpEth(): LP wallet received ${ethers.formatEther(await miner.totalLpEthReleased())} ETH (release rule: threshold or interval)`);
 }
 
 main().catch((e) => { console.error(e); process.exitCode = 1; });

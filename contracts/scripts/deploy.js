@@ -6,6 +6,16 @@ const LP_WALLET = process.env.LP_WALLET_ADDRESS || "0x78a851D19E2152bB7162d8924C
 const OWNER_FEE_WALLET = process.env.OWNER_FEE_WALLET_ADDRESS || "0xc2413696576176d1e31D55a2DEdA609906a15596";
 const ECO_WALLET = process.env.ECO_WALLET_ADDRESS || "0x13864051772FDFBce895d21a483eee02edaeB445";
 
+// ETH fee economics (all overridable via env):
+// - BUY_FEE_ETH: fixed ETH charged on every buyMiners call; half accrues to the
+//   platform wallet, half to the on-contract liquidity reserve.
+// - LP_ETH_THRESHOLD / LP_ETH_INTERVAL: the reserve auto-release rule — the
+//   whole reserve goes to the LP wallet when it reaches the threshold, or when
+//   the interval has elapsed since the last release.
+const BUY_FEE_ETH = process.env.BUY_FEE_ETH || "0.0005";
+const LP_ETH_THRESHOLD = process.env.LP_ETH_THRESHOLD || "0.25";
+const LP_ETH_INTERVAL_DAYS = process.env.LP_ETH_INTERVAL_DAYS || "7";
+
 async function main() {
   const [deployer] = await ethers.getSigners();
   const admin = process.env.ADMIN_ADDRESS || deployer.address;
@@ -17,8 +27,16 @@ async function main() {
   console.log("Owner fee wallet:", OWNER_FEE_WALLET);
   console.log("Eco wallet:", ECO_WALLET);
 
+  console.log("Buy fee (ETH):", BUY_FEE_ETH);
+  console.log("LP release threshold (ETH):", LP_ETH_THRESHOLD, "| interval (days):", LP_ETH_INTERVAL_DAYS);
+
   const BuffCatMiner = await ethers.getContractFactory("BuffCatMiner");
-  const miner = await BuffCatMiner.deploy(BUFFCAT_TOKEN, LP_WALLET, OWNER_FEE_WALLET, ECO_WALLET, admin);
+  const miner = await BuffCatMiner.deploy(
+    BUFFCAT_TOKEN, LP_WALLET, OWNER_FEE_WALLET, ECO_WALLET, admin,
+    ethers.parseEther(BUY_FEE_ETH),
+    ethers.parseEther(LP_ETH_THRESHOLD),
+    BigInt(LP_ETH_INTERVAL_DAYS) * 86400n
+  );
   await miner.waitForDeployment();
 
   const address = await miner.getAddress();

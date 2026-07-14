@@ -64,7 +64,7 @@
           <div class="mine-step">
             <div class="num">1</div>
             <h3>Buy miners</h3>
-            <p>Spend $BUFFCAT to open a position. A 3% fee applies (split to liquidity/burn, the platform, and the ecosystem wallet) — the rest becomes your locked principal.</p>
+            <p>Spend $BUFFCAT to open a position. A 2% token fee (liquidity + ecosystem) plus a small fixed ETH platform fee applies — the rest becomes your locked principal. Half the ETH fee auto-accrues into an on-contract liquidity reserve.</p>
           </div>
           <div class="mine-step">
             <div class="num">2</div>
@@ -117,10 +117,10 @@
             </div>
 
             <div class="mine-breakdown">
-              <div class="row"><span>Buy fee (3%)</span><span id="bdFee">0.00</span></div>
+              <div class="row"><span>Token buy fee (2%)</span><span id="bdFee">0.00</span></div>
               <div class="row"><span>&nbsp;&nbsp;→ LP / burn (1%)</span><span id="bdLp">0.00</span></div>
-              <div class="row"><span>&nbsp;&nbsp;→ Platform (1%)</span><span id="bdOwner">0.00</span></div>
               <div class="row"><span>&nbsp;&nbsp;→ Ecosystem (1%)</span><span id="bdEco">0.00</span></div>
+              <div class="row"><span>Platform fee (ETH)</span><span id="bdOwner">fixed ETH fee</span></div>
               <div class="row total"><span>Locked principal</span><span id="bdPrincipal">0.00</span></div>
               <div class="row total"><span>Hashpower earned</span><span id="bdHashpower">0.00</span></div>
             </div>

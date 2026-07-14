@@ -12,6 +12,17 @@ import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step
 ///         capped, owner-funded reward stream. Yield is bounded by tokens the
 ///         contract actually holds — it is never funded by other users' deposits.
 ///
+/// ETH fee model: every buy pays a fixed ETH fee (buyFeeEth). Half accrues for
+/// the platform wallet (project sustainability, withdrawable any time), half
+/// accrues in an on-contract liquidity reserve released to the LP wallet by a
+/// fixed on-chain rule — the full reserve, whenever it reaches
+/// lpEthReleaseThreshold or lpEthReleaseInterval has elapsed since the last
+/// release. The contract deliberately does NOT call a DEX router itself:
+/// adding liquidity inside user transactions invites sandwich/MEV and
+/// price-manipulation attacks, so the final pool-add stays a deliberate
+/// LP-wallet action. The token buy fee is 2% (1% LP, 1% eco); claim and
+/// early-exit fees keep the original 3% three-way split.
+///
 /// Design notes (why it's shaped this way):
 /// - Reward accounting uses the Synthetix StakingRewards accumulator pattern:
 ///   O(1) gas per buy/claim/unstake regardless of how many users exist, so the
@@ -56,8 +67,12 @@ contract BuffCatMiner is ReentrancyGuard, Pausable, Ownable2Step {
     address public immutable ownerFeeWallet;
     address public immutable ecoWallet;
 
+    uint256 public immutable buyFeeEth; // fixed ETH charged per buyMiners call (0 disables)
+    uint256 public immutable lpEthReleaseThreshold; // release reserve as soon as it reaches this...
+    uint256 public immutable lpEthReleaseInterval; // ...or once this much time passed since the last release
+
     uint256 public constant BPS_DENOM = 10_000;
-    uint256 public constant BUY_FEE_BPS = 300; // 3%
+    uint256 public constant BUY_FEE_BPS = 200; // 2% (1% LP, 1% eco — platform is paid in ETH)
     uint256 public constant WITHDRAW_FEE_BPS = 300; // 3%
     uint256 public constant EARLY_EXIT_FEE_BPS = 1_000; // 10%
     uint256 public constant FEE_SHARE_BPS = 100; // 1% to each of LP / owner / eco
@@ -87,6 +102,12 @@ contract BuffCatMiner is ReentrancyGuard, Pausable, Ownable2Step {
     uint256 public totalRewardFunded; // lifetime, for transparency
     uint256 public totalRewardClaimed; // lifetime gross claimed
 
+    uint256 public platformEthAccrued; // ETH waiting for the platform wallet (pull-payment)
+    uint256 public lpEthReserve; // ETH earmarked for liquidity, held until the release rule fires
+    uint256 public lastLpEthRelease;
+    uint256 public totalPlatformEthPaid; // lifetime, for transparency
+    uint256 public totalLpEthReleased; // lifetime, for transparency
+
     mapping(address => Position[]) public positions;
 
     // ---------------------------------------------------------------------
@@ -109,17 +130,32 @@ contract BuffCatMiner is ReentrancyGuard, Pausable, Ownable2Step {
     );
     event RewardFunded(address indexed funder, uint256 amount, uint256 duration, uint256 newRate);
     event EarlyExitBonusInjected(uint256 amount, uint256 newRate, uint256 newFinish);
+    event BuyFeeEthAccrued(address indexed buyer, uint256 platformShare, uint256 lpShare);
+    event PlatformEthWithdrawn(uint256 amount);
+    event LpEthReleased(uint256 amount, uint256 releasedAt);
 
-    constructor(address buffcatToken, address lpWallet_, address ownerFeeWallet_, address ecoWallet_, address admin)
-        Ownable(admin)
-    {
+    constructor(
+        address buffcatToken,
+        address lpWallet_,
+        address ownerFeeWallet_,
+        address ecoWallet_,
+        address admin,
+        uint256 buyFeeEth_,
+        uint256 lpEthReleaseThreshold_,
+        uint256 lpEthReleaseInterval_
+    ) Ownable(admin) {
         require(buffcatToken != address(0), "buffcat=0");
         require(lpWallet_ != address(0) && ownerFeeWallet_ != address(0) && ecoWallet_ != address(0), "wallet=0");
         require(admin != address(0), "admin=0");
+        require(lpEthReleaseInterval_ > 0, "interval=0");
         buffcat = IERC20(buffcatToken);
         lpWallet = lpWallet_;
         ownerFeeWallet = ownerFeeWallet_;
         ecoWallet = ecoWallet_;
+        buyFeeEth = buyFeeEth_;
+        lpEthReleaseThreshold = lpEthReleaseThreshold_;
+        lpEthReleaseInterval = lpEthReleaseInterval_;
+        lastLpEthRelease = block.timestamp;
     }
 
     // ---------------------------------------------------------------------
@@ -155,8 +191,17 @@ contract BuffCatMiner is ReentrancyGuard, Pausable, Ownable2Step {
     // User actions
     // ---------------------------------------------------------------------
 
-    function buyMiners(uint256 amount, Tier tier) external nonReentrant whenNotPaused updateReward(msg.sender) {
+    function buyMiners(uint256 amount, Tier tier) external payable nonReentrant whenNotPaused updateReward(msg.sender) {
         require(amount > 0, "amount=0");
+        require(msg.value == buyFeeEth, "wrong ETH fee");
+
+        if (msg.value > 0) {
+            uint256 lpShare = msg.value / 2;
+            uint256 platformShare = msg.value - lpShare; // odd wei goes to the platform
+            lpEthReserve += lpShare;
+            platformEthAccrued += platformShare;
+            emit BuyFeeEthAccrued(msg.sender, platformShare, lpShare);
+        }
 
         uint256 balBefore = buffcat.balanceOf(address(this));
         buffcat.safeTransferFrom(msg.sender, address(this), amount);
@@ -165,7 +210,7 @@ contract BuffCatMiner is ReentrancyGuard, Pausable, Ownable2Step {
 
         uint256 fee = (received * BUY_FEE_BPS) / BPS_DENOM;
         uint256 principal = received - fee;
-        _distributeFee(fee);
+        _distributeBuyTokenFee(fee);
 
         uint256 multiplier = _tierMultiplierBps[uint256(tier)];
         uint256 hashpower = (principal * multiplier) / BPS_DENOM;
@@ -236,6 +281,41 @@ contract BuffCatMiner is ReentrancyGuard, Pausable, Ownable2Step {
         emit Unstaked(msg.sender, positionId, principal, fee, payout, early);
     }
 
+    /// @notice Forward all accrued platform ETH to the (immutable) platform
+    ///         wallet. Callable by anyone — the destination is fixed, so this
+    ///         is pure plumbing; a pull-payment so a misbehaving wallet can
+    ///         never block user buys.
+    function withdrawPlatformEth() external nonReentrant {
+        uint256 amount = platformEthAccrued;
+        require(amount > 0, "nothing accrued");
+        platformEthAccrued = 0;
+        totalPlatformEthPaid += amount;
+        (bool ok,) = ownerFeeWallet.call{value: amount}("");
+        require(ok, "eth send failed");
+        emit PlatformEthWithdrawn(amount);
+    }
+
+    /// @notice Release the liquidity ETH reserve to the (immutable) LP wallet.
+    ///         Callable by anyone. The release rule is fixed on-chain:
+    ///         HOW MUCH — always the entire reserve;
+    ///         WHEN — as soon as the reserve reaches lpEthReleaseThreshold, or
+    ///         once lpEthReleaseInterval has elapsed since the last release
+    ///         (so slow periods still sweep the dust through).
+    function releaseLpEth() external nonReentrant {
+        uint256 amount = lpEthReserve;
+        require(amount > 0, "reserve empty");
+        require(
+            amount >= lpEthReleaseThreshold || block.timestamp >= lastLpEthRelease + lpEthReleaseInterval,
+            "release rule not met"
+        );
+        lpEthReserve = 0;
+        lastLpEthRelease = block.timestamp;
+        totalLpEthReleased += amount;
+        (bool ok,) = lpWallet.call{value: amount}("");
+        require(ok, "eth send failed");
+        emit LpEthReleased(amount, block.timestamp);
+    }
+
     // ---------------------------------------------------------------------
     // Owner actions — additive only, never touches user funds
     // ---------------------------------------------------------------------
@@ -286,6 +366,15 @@ contract BuffCatMiner is ReentrancyGuard, Pausable, Ownable2Step {
     // ---------------------------------------------------------------------
     // Internal helpers
     // ---------------------------------------------------------------------
+
+    /// @dev Buy-time token fee: 2% split half to LP, half (plus dust) to eco.
+    ///      The platform's cut of buys arrives as ETH instead.
+    function _distributeBuyTokenFee(uint256 fee) internal {
+        if (fee == 0) return;
+        uint256 lpShare = fee / 2;
+        buffcat.safeTransfer(lpWallet, lpShare);
+        buffcat.safeTransfer(ecoWallet, fee - lpShare);
+    }
 
     function _distributeFee(uint256 fee) internal {
         if (fee == 0) return;

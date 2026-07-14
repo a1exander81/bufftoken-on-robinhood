@@ -3,7 +3,10 @@ const { ethers } = require("hardhat");
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 const BPS_DENOM = 10_000n;
-const BUY_FEE_BPS = 300n;
+const BUY_FEE_BPS = 200n;
+const BUY_FEE_ETH = 5n * 10n ** 14n; // 0.0005 ETH per buy
+const LP_ETH_THRESHOLD = 25n * 10n ** 16n; // 0.25 ETH
+const LP_ETH_INTERVAL = 7n * 86400n; // 7 days
 const WITHDRAW_FEE_BPS = 300n;
 const EARLY_EXIT_FEE_BPS = 1_000n;
 
@@ -25,7 +28,10 @@ async function deployFixture() {
     lpWallet.address,
     ownerFeeWallet.address,
     ecoWallet.address,
-    admin.address
+    admin.address,
+    BUY_FEE_ETH,
+    LP_ETH_THRESHOLD,
+    LP_ETH_INTERVAL
   );
 
   for (const user of [alice, bob, carol, admin]) {
@@ -45,9 +51,12 @@ async function fundRewards(ctx, amount, duration) {
 function buyFeeSplit(grossAmount) {
   const fee = (grossAmount * BUY_FEE_BPS) / BPS_DENOM;
   const principal = grossAmount - fee;
-  const each = fee / 3n;
-  return { fee, principal, each };
+  const lpShare = fee / 2n;
+  const ecoShare = fee - lpShare;
+  return { fee, principal, lpShare, ecoShare };
 }
+
+const ETH_FEE = { value: BUY_FEE_ETH };
 
 describe("BuffCatMiner", function () {
   describe("deployment", function () {
@@ -58,34 +67,41 @@ describe("BuffCatMiner", function () {
       expect(await ctx.miner.ownerFeeWallet()).to.equal(ctx.ownerFeeWallet.address);
       expect(await ctx.miner.ecoWallet()).to.equal(ctx.ecoWallet.address);
       expect(await ctx.miner.owner()).to.equal(ctx.admin.address);
+      expect(await ctx.miner.buyFeeEth()).to.equal(BUY_FEE_ETH);
+      expect(await ctx.miner.lpEthReleaseThreshold()).to.equal(LP_ETH_THRESHOLD);
+      expect(await ctx.miner.lpEthReleaseInterval()).to.equal(LP_ETH_INTERVAL);
 
       const BuffCatMiner = await ethers.getContractFactory("BuffCatMiner");
       await expect(
-        BuffCatMiner.deploy(ethers.ZeroAddress, ctx.lpWallet.address, ctx.ownerFeeWallet.address, ctx.ecoWallet.address, ctx.admin.address)
+        BuffCatMiner.deploy(ethers.ZeroAddress, ctx.lpWallet.address, ctx.ownerFeeWallet.address, ctx.ecoWallet.address, ctx.admin.address, BUY_FEE_ETH, LP_ETH_THRESHOLD, LP_ETH_INTERVAL)
       ).to.be.revertedWith("buffcat=0");
       await expect(
-        BuffCatMiner.deploy(await ctx.buffcat.getAddress(), ethers.ZeroAddress, ctx.ownerFeeWallet.address, ctx.ecoWallet.address, ctx.admin.address)
+        BuffCatMiner.deploy(await ctx.buffcat.getAddress(), ethers.ZeroAddress, ctx.ownerFeeWallet.address, ctx.ecoWallet.address, ctx.admin.address, BUY_FEE_ETH, LP_ETH_THRESHOLD, LP_ETH_INTERVAL)
       ).to.be.revertedWith("wallet=0");
     });
   });
 
   describe("buyMiners", function () {
-    it("takes a 3% fee split 1/1/1 across LP/owner/eco and locks the rest as principal", async function () {
+    it("takes a 2% token fee split LP/eco plus the fixed ETH fee, and locks the rest as principal", async function () {
       const ctx = await deployFixture();
       const { miner, buffcat, alice, lpWallet, ownerFeeWallet, ecoWallet } = ctx;
       const amount = 10_000n * ONE;
-      const { fee, principal, each } = buyFeeSplit(amount);
+      const { principal, lpShare, ecoShare } = buyFeeSplit(amount);
 
       const lpBefore = await buffcat.balanceOf(lpWallet.address);
       const ownerBefore = await buffcat.balanceOf(ownerFeeWallet.address);
       const ecoBefore = await buffcat.balanceOf(ecoWallet.address);
 
-      await expect(miner.connect(alice).buyMiners(amount, TIER.DAY))
+      await expect(miner.connect(alice).buyMiners(amount, TIER.DAY, ETH_FEE))
         .to.emit(miner, "MinerPurchased");
 
-      expect((await buffcat.balanceOf(lpWallet.address)) - lpBefore).to.equal(each);
-      expect((await buffcat.balanceOf(ownerFeeWallet.address)) - ownerBefore).to.equal(each);
-      expect((await buffcat.balanceOf(ecoWallet.address)) - ecoBefore).to.equal(each + (fee - each * 3n));
+      expect((await buffcat.balanceOf(lpWallet.address)) - lpBefore).to.equal(lpShare);
+      expect((await buffcat.balanceOf(ownerFeeWallet.address)) - ownerBefore).to.equal(0n); // platform is paid in ETH now
+      expect((await buffcat.balanceOf(ecoWallet.address)) - ecoBefore).to.equal(ecoShare);
+
+      // the ETH fee accrued half/half
+      expect(await miner.platformEthAccrued()).to.equal(BUY_FEE_ETH - BUY_FEE_ETH / 2n);
+      expect(await miner.lpEthReserve()).to.equal(BUY_FEE_ETH / 2n);
 
       const pos = await miner.positions(alice.address, 0);
       expect(pos.principal).to.equal(principal);
@@ -101,7 +117,7 @@ describe("BuffCatMiner", function () {
       const amount = 1_000n * ONE;
 
       for (const [tierName, tier] of Object.entries(TIER)) {
-        await miner.connect(alice).buyMiners(amount, tier);
+        await miner.connect(alice).buyMiners(amount, tier, ETH_FEE);
       }
 
       const positions = await Promise.all([0, 1, 2, 3].map((i) => miner.positions(alice.address, i)));
@@ -113,12 +129,12 @@ describe("BuffCatMiner", function () {
     it("reverts on zero amount and while paused", async function () {
       const ctx = await deployFixture();
       const { miner, admin, alice } = ctx;
-      await expect(miner.connect(alice).buyMiners(0, TIER.DAY)).to.be.revertedWith("amount=0");
+      await expect(miner.connect(alice).buyMiners(0, TIER.DAY, ETH_FEE)).to.be.revertedWith("amount=0");
 
       await miner.connect(admin).pauseNewMiners();
-      await expect(miner.connect(alice).buyMiners(1000n * ONE, TIER.DAY)).to.be.reverted;
+      await expect(miner.connect(alice).buyMiners(1000n * ONE, TIER.DAY, ETH_FEE)).to.be.reverted;
       await miner.connect(admin).unpauseNewMiners();
-      await expect(miner.connect(alice).buyMiners(1000n * ONE, TIER.DAY)).to.not.be.reverted;
+      await expect(miner.connect(alice).buyMiners(1000n * ONE, TIER.DAY, ETH_FEE)).to.not.be.reverted;
     });
 
     it("only the owner can pause/unpause", async function () {
@@ -131,7 +147,7 @@ describe("BuffCatMiner", function () {
       const FOT = await ethers.getContractFactory("FeeOnTransferMock");
       const fot = await FOT.deploy();
       const BuffCatMiner = await ethers.getContractFactory("BuffCatMiner");
-      const miner = await BuffCatMiner.deploy(await fot.getAddress(), lpWallet.address, ownerFeeWallet.address, ecoWallet.address, admin.address);
+      const miner = await BuffCatMiner.deploy(await fot.getAddress(), lpWallet.address, ownerFeeWallet.address, ecoWallet.address, admin.address, 0n, LP_ETH_THRESHOLD, LP_ETH_INTERVAL);
 
       await fot.mint(alice.address, 10_000n * ONE);
       await fot.connect(alice).approve(await miner.getAddress(), ethers.MaxUint256);
@@ -155,8 +171,8 @@ describe("BuffCatMiner", function () {
       const { miner, buffcat, alice, bob, lpWallet, ownerFeeWallet, ecoWallet } = ctx;
 
       // Equal principal, but bob picks a 2x tier multiplier (MONTH) vs alice's 1x (DAY).
-      await miner.connect(alice).buyMiners(10_000n * ONE, TIER.DAY);
-      await miner.connect(bob).buyMiners(10_000n * ONE, TIER.MONTH);
+      await miner.connect(alice).buyMiners(10_000n * ONE, TIER.DAY, ETH_FEE);
+      await miner.connect(bob).buyMiners(10_000n * ONE, TIER.MONTH, ETH_FEE);
 
       const rewardAmount = 100_000n * ONE;
       const duration = 100_000n;
@@ -199,7 +215,7 @@ describe("BuffCatMiner", function () {
       const ctx = await deployFixture();
       const { miner, buffcat, alice } = ctx;
       const amount = 5_000n * ONE;
-      await miner.connect(alice).buyMiners(amount, TIER.DAY);
+      await miner.connect(alice).buyMiners(amount, TIER.DAY, ETH_FEE);
       const pos = await miner.positions(alice.address, 0);
 
       await time.increase(Number(TIER_DURATION[TIER.DAY]) + 1);
@@ -216,8 +232,8 @@ describe("BuffCatMiner", function () {
       const { miner, buffcat, alice, bob, lpWallet, ownerFeeWallet, ecoWallet } = ctx;
       const amount = 10_000n * ONE;
 
-      await miner.connect(alice).buyMiners(amount, TIER.MONTH);
-      await miner.connect(bob).buyMiners(amount, TIER.MONTH); // stays, receives the bonus
+      await miner.connect(alice).buyMiners(amount, TIER.MONTH, ETH_FEE);
+      await miner.connect(bob).buyMiners(amount, TIER.MONTH, ETH_FEE); // stays, receives the bonus
 
       const pos = await miner.positions(alice.address, 0);
       const principal = pos.principal;
@@ -243,7 +259,7 @@ describe("BuffCatMiner", function () {
     it("cannot double-unstake the same position", async function () {
       const ctx = await deployFixture();
       const { miner, alice } = ctx;
-      await miner.connect(alice).buyMiners(1_000n * ONE, TIER.DAY);
+      await miner.connect(alice).buyMiners(1_000n * ONE, TIER.DAY, ETH_FEE);
       await time.increase(Number(TIER_DURATION[TIER.DAY]) + 1);
       await miner.connect(alice).unstake(0);
       await expect(miner.connect(alice).unstake(0)).to.be.revertedWith("already withdrawn");
@@ -278,7 +294,7 @@ describe("BuffCatMiner", function () {
       const FOT = await ethers.getContractFactory("FeeOnTransferMock");
       const fot = await FOT.deploy();
       const BuffCatMiner = await ethers.getContractFactory("BuffCatMiner");
-      const miner = await BuffCatMiner.deploy(await fot.getAddress(), lpWallet.address, ownerFeeWallet.address, ecoWallet.address, admin.address);
+      const miner = await BuffCatMiner.deploy(await fot.getAddress(), lpWallet.address, ownerFeeWallet.address, ecoWallet.address, admin.address, 0n, LP_ETH_THRESHOLD, LP_ETH_INTERVAL);
 
       const requested = 100_000n * ONE;
       const received = requested - (requested * 200n) / 10_000n; // 2% tax
@@ -312,6 +328,78 @@ describe("BuffCatMiner", function () {
     });
   });
 
+  describe("ETH platform fee + LP reserve release rule", function () {
+    it("rejects a buy with the wrong ETH fee", async function () {
+      const ctx = await deployFixture();
+      const { miner, alice } = ctx;
+      await expect(miner.connect(alice).buyMiners(1_000n * ONE, TIER.DAY)).to.be.revertedWith("wrong ETH fee");
+      await expect(
+        miner.connect(alice).buyMiners(1_000n * ONE, TIER.DAY, { value: BUY_FEE_ETH * 2n })
+      ).to.be.revertedWith("wrong ETH fee");
+    });
+
+    it("accrues half/half and pays the platform wallet on withdrawPlatformEth", async function () {
+      const ctx = await deployFixture();
+      const { miner, alice, bob, ownerFeeWallet } = ctx;
+      await miner.connect(alice).buyMiners(1_000n * ONE, TIER.DAY, ETH_FEE);
+      await miner.connect(bob).buyMiners(1_000n * ONE, TIER.WEEK, ETH_FEE);
+
+      const accrued = await miner.platformEthAccrued();
+      expect(accrued).to.equal((BUY_FEE_ETH - BUY_FEE_ETH / 2n) * 2n);
+
+      const before = await ethers.provider.getBalance(ownerFeeWallet.address);
+      await miner.connect(alice).withdrawPlatformEth(); // anyone can trigger; destination is fixed
+      const after = await ethers.provider.getBalance(ownerFeeWallet.address);
+      expect(after - before).to.equal(accrued);
+      expect(await miner.platformEthAccrued()).to.equal(0n);
+      expect(await miner.totalPlatformEthPaid()).to.equal(accrued);
+      await expect(miner.connect(alice).withdrawPlatformEth()).to.be.revertedWith("nothing accrued");
+    });
+
+    it("holds the LP reserve until the threshold is reached, then releases it all", async function () {
+      const ctx = await deployFixture();
+      const { miner, buffcat, alice, lpWallet } = ctx;
+
+      await miner.connect(alice).buyMiners(1_000n * ONE, TIER.DAY, ETH_FEE);
+      // one buy: reserve = 0.00025 ETH, far below the 0.25 threshold and interval untouched
+      await expect(miner.connect(alice).releaseLpEth()).to.be.revertedWith("release rule not met");
+
+      // enough buys to cross the threshold: need 0.25 / 0.00025 = 1000 buys — instead
+      // simulate the passage with many buys is slow; use interval path in the next test
+      // and cross the threshold cheaply here with a tiny threshold deployment.
+      const BuffCatMiner = await ethers.getContractFactory("BuffCatMiner");
+      const miner2 = await BuffCatMiner.deploy(
+        await buffcat.getAddress(), lpWallet.address, ctx.ownerFeeWallet.address, ctx.ecoWallet.address,
+        ctx.admin.address, BUY_FEE_ETH, BUY_FEE_ETH / 2n, LP_ETH_INTERVAL
+      );
+      await buffcat.connect(alice).approve(await miner2.getAddress(), ethers.MaxUint256);
+      await miner2.connect(alice).buyMiners(1_000n * ONE, TIER.DAY, ETH_FEE);
+
+      const reserve = await miner2.lpEthReserve();
+      expect(reserve).to.equal(BUY_FEE_ETH / 2n); // meets the tiny threshold
+      const before = await ethers.provider.getBalance(lpWallet.address);
+      await miner2.connect(alice).releaseLpEth();
+      const after = await ethers.provider.getBalance(lpWallet.address);
+      expect(after - before).to.equal(reserve);
+      expect(await miner2.lpEthReserve()).to.equal(0n);
+      expect(await miner2.totalLpEthReleased()).to.equal(reserve);
+    });
+
+    it("also releases after the time interval even below the threshold", async function () {
+      const ctx = await deployFixture();
+      const { miner, alice, lpWallet } = ctx;
+      await miner.connect(alice).buyMiners(1_000n * ONE, TIER.DAY, ETH_FEE);
+      await expect(miner.connect(alice).releaseLpEth()).to.be.revertedWith("release rule not met");
+
+      await time.increase(Number(LP_ETH_INTERVAL) + 1);
+      const reserve = await miner.lpEthReserve();
+      const before = await ethers.provider.getBalance(lpWallet.address);
+      await miner.connect(alice).releaseLpEth();
+      expect((await ethers.provider.getBalance(lpWallet.address)) - before).to.equal(reserve);
+      await expect(miner.connect(alice).releaseLpEth()).to.be.revertedWith("reserve empty");
+    });
+  });
+
   describe("reentrancy protection", function () {
     it("blocks a hostile token from re-entering claimDividends mid-payout", async function () {
       const [deployer, lpWallet, ownerFeeWallet, ecoWallet, admin] = await ethers.getSigners();
@@ -324,7 +412,10 @@ describe("BuffCatMiner", function () {
         lpWallet.address,
         ownerFeeWallet.address,
         ecoWallet.address,
-        admin.address
+        admin.address,
+        0n, // ETH fee disabled: the attacker contract buys without ETH
+        LP_ETH_THRESHOLD,
+        LP_ETH_INTERVAL
       );
 
       const Attacker = await ethers.getContractFactory("ReentrancyAttacker");
@@ -378,7 +469,7 @@ describe("BuffCatMiner", function () {
 
       const gasUsed = [];
       for (const u of users) {
-        const tx = await miner.connect(u).buyMiners(1_000n * ONE, TIER.WEEK);
+        const tx = await miner.connect(u).buyMiners(1_000n * ONE, TIER.WEEK, ETH_FEE);
         const receipt = await tx.wait();
         gasUsed.push(receipt.gasUsed);
       }
@@ -428,7 +519,7 @@ describe("BuffCatMiner", function () {
         if (action < 0.5) {
           const amount = BigInt(1 + Math.floor(rand() * 5000)) * ONE;
           const tier = tiers[Math.floor(rand() * tiers.length)];
-          await miner.connect(user).buyMiners(amount, tier);
+          await miner.connect(user).buyMiners(amount, tier, ETH_FEE);
         } else if (action < 0.8) {
           if ((await miner.pendingRewards(user.address)) > 0n) {
             await miner.connect(user).claimDividends();
