@@ -395,7 +395,7 @@
 
   gsap.to('#hero', {
     scrollTrigger:{trigger:'#hero', start:'top top', end:'bottom top', scrub:true},
-    yPercent:28, opacity:0.15, ease:'none'
+    yPercent:14, opacity:0.55, ease:'none'
   });
 
   document.querySelectorAll('.ridge').forEach(layer => {
