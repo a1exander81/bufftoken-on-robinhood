@@ -1,7 +1,7 @@
 
 (function(){
   "use strict";
-  console.log('[buffcat] site js build 20260714b');
+  console.log('[buffcat] site js build 20260715a');
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   gsap.registerPlugin(ScrollTrigger);
 
@@ -71,7 +71,7 @@
   function setDisconnectedState(){
     if(walletAddressEl) walletAddressEl.textContent = 'Not connected';
     if(walletBalanceEl) walletBalanceEl.textContent = '0.0000 $BUFFCAT';
-    if(walletRoleEl) walletRoleEl.textContent = 'Read-only';
+    if(walletRoleEl) walletRoleEl.textContent = 'Public — anyone can mine';
     updateHeroBalance(null);
     setWalletMessage('Connect your wallet to see your $BUFFCAT balance and the equivalent USDT value.');
   }
@@ -124,7 +124,7 @@
       }
       updateHeroBalance(parseFloat(ethers.utils.formatUnits(rawBalance, decimals)));
       if(isOwner){
-        setWalletMessage('Owner access granted. Admin controls will be available here for owner-only actions.');
+        setWalletMessage('Owner wallet detected. Mining is public — everyone can buy miners and claim; this wallet additionally gets admin tools (reward funding, pause).');
       } else {
         setWalletMessage('Connected on ' + chainName + '. Your $BUFFCAT balance is visible for bot-traded holdings as well.');
       }
@@ -158,7 +158,7 @@
       walletAddressEl.textContent = formatAddress(address);
       isOwner = address === OWNER_ADDRESS.toLowerCase();
       if(walletRoleEl){
-        walletRoleEl.textContent = isOwner ? 'Owner' : 'Read-only';
+        walletRoleEl.textContent = isOwner ? 'Owner — mining + admin tools' : 'Public — anyone can mine';
       }
       setConnectButtonLabel('Connected');
       updateBalance();
@@ -186,7 +186,7 @@
         walletAddressEl.textContent = formatAddress(address);
         isOwner = address === OWNER_ADDRESS.toLowerCase();
         if(walletRoleEl){
-          walletRoleEl.textContent = isOwner ? 'Owner' : 'Read-only';
+          walletRoleEl.textContent = isOwner ? 'Owner — mining + admin tools' : 'Public — anyone can mine';
         }
         updateBalance();
       }
