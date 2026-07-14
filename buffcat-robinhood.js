@@ -1,7 +1,7 @@
 
 (function(){
   "use strict";
-  console.log('[buffcat] site js build 20260714a');
+  console.log('[buffcat] site js build 20260714b');
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   gsap.registerPlugin(ScrollTrigger);
 
