@@ -46,16 +46,24 @@
   const heroBalanceAmountEl = document.getElementById('heroBalanceAmount');
   const heroBalanceQuipEl = document.getElementById('heroBalanceQuip');
 
-  function balanceQuip(tokens){
-    if(tokens <= 0)        return "Zero. The cat won\u2019t even make eye contact with you. Fix this.";
-    if(tokens < 100_000)   return "You gotta sell your house to buy more of this gem.";
-    if(tokens < 500_000)   return "Respectable bag. The cat lets you spot him on bench days.";
-    if(tokens < 1_000_000) return "You own a significant amount \u2014 planning a vacation to Mars soon?";
-    if(tokens < 10_000_000)return "Whale detected \uD83D\uDC0B Vlad would like to know your location.";
-    return "At this point YOU are the liquidity. The cat works for you now.";
+  function balanceQuip(usd){
+    if(usd <= 0)        return "Zero. The cat won\u2019t even make eye contact with you. Fix this.";
+    if(usd < 25)        return "Starter bag. The cat nods at you from across the gym.";
+    if(usd < 100)       return "Respectable bag. The cat lets you spot him on bench days.";
+    if(usd < 1000)      return "Now we\u2019re lifting \u2014 the cat respects the grind.";
+    if(usd < 10000)     return "Heavy lifter. You\u2019re benching plates with the cat now.";
+    if(usd < 50000)     return "Serious gains \u2014 planning a vacation to Mars soon?";
+    return "Whale detected \uD83D\uDC0B Vlad would like to know your location.";
+  }
+  async function getBuffcatUsdPrice(){
+    try{
+      const r = await fetch('https://api.dexscreener.com/latest/dex/tokens/' + CA);
+      const d = await r.json();
+      return parseFloat((d.pairs && d.pairs[0] && d.pairs[0].priceUsd) || '0');
+    }catch(e){ return 0; }
   }
 
-  function updateHeroBalance(tokens){
+  async function updateHeroBalance(tokens){
     if(!heroBalanceEl) return;
     if(tokens === null){
       heroBalanceEl.hidden = true;
@@ -64,8 +72,11 @@
     heroBalanceAmountEl.textContent = tokens.toLocaleString(undefined, {
       maximumFractionDigits: tokens >= 1000 ? 0 : 4
     });
-    heroBalanceQuipEl.textContent = balanceQuip(tokens);
     heroBalanceEl.hidden = false;
+    heroBalanceQuipEl.textContent = "Reading the tape\u2026";
+    const price = await getBuffcatUsdPrice();
+    const usd = tokens * price;
+    heroBalanceQuipEl.textContent = balanceQuip(usd);
   }
 
   function setDisconnectedState(){
@@ -435,9 +446,13 @@
     card.addEventListener('mouseleave', () => gsap.to(card, {rotateY:0, rotateX:0, duration:0.6}));
   });
 
+  const creedLit = () => document.documentElement.getAttribute('data-theme') === 'light'
+    ? 'rgba(12,26,16,1)' : 'rgba(234,242,236,1)';
+  const creedDim = () => document.documentElement.getAttribute('data-theme') === 'light'
+    ? 'rgba(12,26,16,.35)' : 'rgba(234,242,236,.2)';
   document.querySelectorAll('.creed-line').forEach(line => {
-    gsap.fromTo(line, {color:'rgba(234,242,236,.2)'}, {
-      color:'rgba(234,242,236,1)',
+    gsap.fromTo(line, {color:creedDim()}, {
+      color:creedLit(),
       scrollTrigger:{trigger:line, start:'top 75%', end:'top 45%', scrub:true}
     });
   });
