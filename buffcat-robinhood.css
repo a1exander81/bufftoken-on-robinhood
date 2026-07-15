@@ -531,3 +531,175 @@
 #hero .ca-bar code{color:#FFD97A}
 #hero .hero-image{opacity:.2}
 .floater{opacity:.07}
+
+/* ============================================================
+   LIGHT MODE — scoped to [data-theme="light"]. Dark = default.
+   ============================================================ */
+:root[data-theme="light"]{
+  --bg:#F4F6F3; --bg-2:#EAEEE8; --panel:#FFFFFF;
+  --line:rgba(6,120,10,.16);
+  --green:#03962C; --green-soft:#0BA83E; --green-dim:#C7E9CE;
+  --gold:#9A6B12; --gold-hot:#B8841C;
+  --shiba-glow:rgba(200,120,20,.10); --shiba-glow-strong:rgba(200,110,20,.12);
+  --text:#0C1A10; --dim:#4A5A50; --ink:#F4F6F3; --red:#D23A00;
+}
+:root[data-theme="light"] body{ background:var(--bg); color:var(--text); }
+:root[data-theme="light"] .grid{ opacity:.5;
+  background-image:linear-gradient(rgba(3,150,44,0) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(3,150,44,.06) 1px, transparent 1px); }
+:root[data-theme="light"] .vignette{
+  background:radial-gradient(ellipse at 50% 38%, transparent 55%, rgba(244,246,243,.65) 100%); }
+:root[data-theme="light"] #webgl{ opacity:.28; mix-blend-mode:multiply; }
+:root[data-theme="light"] .r-back{ opacity:.10; }
+:root[data-theme="light"] .r-mid{ opacity:.14; }
+:root[data-theme="light"] .r-front{ opacity:.20; }
+:root[data-theme="light"] .floater{ opacity:.10; filter:none; }
+:root[data-theme="light"] nav.scrolled{ background:rgba(244,246,243,.9); border-color:var(--line); }
+:root[data-theme="light"] h1, :root[data-theme="light"] h2{
+  -webkit-text-stroke:0; text-shadow:0 1px 0 rgba(255,255,255,.6); }
+:root[data-theme="light"] #hero .hero-tagline,
+:root[data-theme="light"] #hero .hero-sub{ text-shadow:none; }
+:root[data-theme="light"] #hero .hero-sub{ color:var(--dim); }
+:root[data-theme="light"] #hero .hero-image{ opacity:.14; mix-blend-mode:multiply; }
+:root[data-theme="light"] #hero::before{
+  background:radial-gradient(circle at 50% 15%, rgba(200,140,40,.10), transparent 30%),
+    linear-gradient(120deg, rgba(255,255,255,.2), rgba(255,255,255,.05)); }
+:root[data-theme="light"] .art-card,
+:root[data-theme="light"] .stat,
+:root[data-theme="light"] .step,
+:root[data-theme="light"] .testimonial-card,
+:root[data-theme="light"] .social-card,
+:root[data-theme="light"] .chart-shell,
+:root[data-theme="light"] .hero-balance,
+:root[data-theme="light"] .ca-bar{
+  background:var(--panel); box-shadow:0 8px 30px rgba(6,40,20,.08); }
+:root[data-theme="light"] .marquee.reverse{ background:var(--bg-2); }
+:root[data-theme="light"] .marquee.reverse span{ color:var(--green); }
+:root[data-theme="light"] .btn-ghost{
+  border-color:rgba(6,60,20,.25); color:var(--text); background:rgba(255,255,255,.5); }
+:root[data-theme="light"] footer{ background:rgba(255,255,255,.9); border-color:var(--line); }
+:root[data-theme="light"] .legal{ color:rgba(74,90,80,.7); }
+:root[data-theme="light"] .modal{ background:var(--panel); }
+:root[data-theme="light"] .modal-body{ background:#f0f2ee; }
+.theme-toggle{ background:rgba(255,172,58,.10); border:1px solid var(--line);
+  border-radius:12px; width:44px; height:44px; display:grid; place-items:center;
+  cursor:pointer; font-size:18px; line-height:1; padding:0;
+  transition:transform .2s, border-color .2s, background .2s; }
+.theme-toggle:hover{ transform:translateY(-2px); border-color:var(--green); }
+
+/* ===== LIGHT MODE FIXES v2 ===== */
+:root[data-theme="light"] #webgl{ opacity:.16; mix-blend-mode:multiply; z-index:0; }
+:root[data-theme="light"] .hero-image{ opacity:.55; mix-blend-mode:normal; filter:contrast(1.15) saturate(1.1) brightness(.92); }
+:root[data-theme="light"] .hero-image-wrap{ z-index:1; }
+:root[data-theme="light"] #hero > *:not(.hero-image-wrap){ position:relative; z-index:3; }
+:root[data-theme="light"] #hero h1{ -webkit-text-stroke:0; color:#03962C; text-shadow:0 2px 8px rgba(255,255,255,.9); }
+:root[data-theme="light"] #hero .hero-tagline{ color:#0C1A10; font-weight:700; text-shadow:0 1px 6px rgba(255,255,255,.9); }
+:root[data-theme="light"] #hero .hero-sub{ color:#243028; font-weight:400; text-shadow:0 1px 4px rgba(255,255,255,.85); }
+:root[data-theme="light"] #hero .hero-sub b{ color:#03962C; font-weight:700; }
+:root[data-theme="light"] .hero-tag{ background:rgba(255,255,255,.85); color:#9A6B12; border-color:rgba(154,107,18,.35); }
+:root[data-theme="light"] .float-field{ opacity:.4; z-index:0; }
+:root[data-theme="light"] .ridge{ opacity:.5; }
+:root[data-theme="light"] .marquee.reverse{ background:#0C1A10; }
+:root[data-theme="light"] .marquee.reverse span{ color:#0BA83E; }
+
+/* ===== LIGHT MODE — remaining sections ===== */
+:root[data-theme="light"] .creed-line{ color:rgba(12,26,16,.25); }
+:root[data-theme="light"] .creed-line span{ color:#0C1A10 !important; }
+:root[data-theme="light"] .eyebrow{ color:#03962C; }
+:root[data-theme="light"] .eyebrow::before{ background:#03962C; }
+:root[data-theme="light"] h1, :root[data-theme="light"] h2{ color:#0C1A10; -webkit-text-stroke:0; text-shadow:0 1px 0 rgba(255,255,255,.5); }
+:root[data-theme="light"] h2 .up{ color:#03962C; text-shadow:none; }
+:root[data-theme="light"] h2 .gold{ color:#9A6B12; text-shadow:none; }
+:root[data-theme="light"] p.lede{ color:#3A4A40; }
+:root[data-theme="light"] p.lede strong{ color:#0C1A10; }
+:root[data-theme="light"] .wallet-card{ background:#fff; box-shadow:0 8px 30px rgba(6,40,20,.08); }
+:root[data-theme="light"] .wallet-title{ color:#0C1A10; }
+:root[data-theme="light"] .wallet-card p,
+:root[data-theme="light"] .wallet-line,
+:root[data-theme="light"] .wallet-note{ color:#4A5A50; }
+:root[data-theme="light"] .wallet-line strong{ color:#0C1A10; }
+:root[data-theme="light"] .step{ background:#fff; }
+:root[data-theme="light"] .step h3{ color:#0C1A10; }
+:root[data-theme="light"] .step p{ color:#4A5A50; }
+:root[data-theme="light"] .stat small{ color:#4A5A50; }
+:root[data-theme="light"] .testimonial-card{ background:#fff; }
+:root[data-theme="light"] .testimonial-card p{ color:#1a2a1e; }
+:root[data-theme="light"] .testimonial-name{ color:#0C1A10; }
+:root[data-theme="light"] .chart-head .pair{ color:#03962C; }
+:root[data-theme="light"] .nav-links a{ color:#3A4A40; }
+:root[data-theme="light"] .nav-links a:hover{ color:#03962C; }
+:root[data-theme="light"] .brand-name{ color:#0C1A10; }
+:root[data-theme="light"] .foot-note,
+:root[data-theme="light"] .foot-links a{ color:#4A5A50; }
+
+/* ===== LIGHT MODE — hero cat visibility override ===== */
+:root[data-theme="light"] .hero-image{
+  opacity:.9;
+  mix-blend-mode:normal;
+  filter:contrast(1.35) saturate(1.25) brightness(.78) drop-shadow(0 8px 24px rgba(0,0,0,.25));
+}
+/* darken the pale wash behind the cat so it has something to sit against */
+:root[data-theme="light"] #hero::before{
+  background:
+    radial-gradient(circle at 50% 30%, rgba(120,150,110,.18), transparent 45%),
+    linear-gradient(180deg, rgba(244,246,243,.1), rgba(210,220,205,.35));
+}
+/* ridges/mountains were too heavy black — lighten to grey-green */
+:root[data-theme="light"] .r-front svg path{ fill:#8a9a86 !important; }
+:root[data-theme="light"] .r-mid svg path{ fill:#a8b4a2 !important; }
+:root[data-theme="light"] .r-back svg path{ fill:#c2ccbc !important; }
+
+/* ===== LIGHT MODE — buff3d visibility (backdrop + darken) ===== */
+/* remove any earlier light hero-image overrides by winning specificity */
+:root[data-theme="light"] .hero-image-wrap{
+  z-index:2;
+}
+/* dark oval glow directly behind the cat so a pale image has contrast */
+:root[data-theme="light"] .hero-image-wrap::before{
+  content:"";
+  position:absolute;
+  left:50%; top:8%;
+  width:min(620px,70vw); height:84%;
+  transform:translateX(-50%);
+  background:radial-gradient(ellipse at 50% 45%,
+    rgba(30,50,25,.55) 0%,
+    rgba(60,80,50,.35) 40%,
+    transparent 72%);
+  z-index:-1;
+  pointer-events:none;
+}
+/* push the near-white cat toward mid-tones so it reads against the glow */
+:root[data-theme="light"] .hero-image{
+  opacity:1;
+  mix-blend-mode:normal;
+  filter:brightness(.62) contrast(1.5) saturate(1.3)
+         drop-shadow(0 10px 26px rgba(0,0,0,.4));
+}
+
+/* ===== LIGHT MODE — remove the milky hero overlay box ===== */
+:root[data-theme="light"] #hero::before{
+  background:none !important;
+  opacity:0 !important;
+}
+/* keep only the soft glow directly behind the cat, nothing rectangular */
+:root[data-theme="light"] .hero-image-wrap::before{
+  background:radial-gradient(ellipse at 50% 45%,
+    rgba(30,50,25,.4) 0%,
+    rgba(60,80,50,.22) 42%,
+    transparent 70%) !important;
+}
+
+/* ===== LIGHT MODE — hero image CLEAN RESET (wins over all prior hacks) ===== */
+:root[data-theme="light"] .hero-image{
+  display:block !important;
+  opacity:1 !important;
+  mix-blend-mode:normal !important;   /* kill the 'screen' blend that bleaches it */
+  filter:saturate(1.15) contrast(1.05) drop-shadow(0 12px 30px rgba(0,0,0,.25)) !important;
+}
+:root[data-theme="light"] .hero-image-wrap::before{ display:none !important; }
+:root[data-theme="light"] #hero::before{ background:none !important; opacity:0 !important; }
+
+/* ===== LIGHT MODE — creed legibility ===== */
+:root[data-theme="light"] .creed-line{ color:rgba(12,26,16,.45) !important; }
+:root[data-theme="light"] .creed-line span{ color:#03962C !important; }
+:root[data-theme="light"] #creed .wrap{ background:radial-gradient(ellipse at 50% 50%, rgba(244,246,243,.8), transparent 75%); border-radius:24px; }

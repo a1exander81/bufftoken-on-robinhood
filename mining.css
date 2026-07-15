@@ -147,3 +147,108 @@
 
 .mine-early-warning{display:none;margin-top:10px;padding:10px 14px;border-radius:10px;background:rgba(255,80,0,.1);border:1px solid rgba(255,80,0,.35);color:#FF8A5C;font-size:12.5px}
 .mine-early-warning.show{display:block}
+
+/* ===== BUFF'MANIA — featured pair ===== */
+.buffmania-card{
+  display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center;
+  border:1px solid rgba(255,172,58,.28);border-radius:24px;padding:32px;
+  background:linear-gradient(160deg,rgba(20,25,20,.9),rgba(6,8,11,.94));
+  box-shadow:0 20px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,172,58,.1);
+}
+@media(max-width:720px){.buffmania-card{grid-template-columns:1fr;text-align:center;padding:24px}}
+.bm-badge-wrap{perspective:800px}
+.bm-badge{
+  width:140px;height:140px;border-radius:28px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;
+  background:linear-gradient(145deg,#1a1f16,#0a0d08);border:2px solid rgba(118,185,0,.5);
+  box-shadow:0 0 0 1px rgba(118,185,0,.2),0 18px 40px rgba(0,0,0,.55),inset 0 2px 8px rgba(118,185,0,.15),inset 0 -6px 14px rgba(0,0,0,.5);
+  transform:rotateX(12deg) rotateY(-14deg);transition:transform .4s ease;
+  animation:bmFloat 4s ease-in-out infinite;
+}
+.buffmania-card:hover .bm-badge{transform:rotateX(6deg) rotateY(-6deg) scale(1.04)}
+@keyframes bmFloat{0%,100%{transform:rotateX(12deg) rotateY(-14deg) translateY(0)}50%{transform:rotateX(12deg) rotateY(-14deg) translateY(-10px)}}
+.bm-badge-ticker{font-family:'Unbounded',sans-serif;font-weight:900;font-size:32px;color:#76B900;text-shadow:0 2px 6px rgba(0,0,0,.6),0 0 22px rgba(118,185,0,.4);letter-spacing:.02em}
+.bm-badge-sub{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+.bm-kicker{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-hot);margin-bottom:8px}
+.bm-title{font-family:'Fredoka',sans-serif;font-size:24px;color:var(--text);margin-bottom:10px}
+.bm-desc{color:var(--dim);font-size:15px;line-height:1.65;max-width:52ch;margin-bottom:18px;font-weight:300}
+.bm-meta{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:20px}
+@media(max-width:720px){.bm-meta{justify-content:center}}
+.bm-meta-item{display:flex;flex-direction:column;gap:3px}
+.bm-ml{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+.bm-mv{font-family:'Fredoka',sans-serif;font-size:16px;color:var(--text);font-weight:600}
+.bm-modal-badge{width:120px;height:120px;border-radius:24px;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(145deg,#1a1f16,#0a0d08);border:2px solid rgba(118,185,0,.5);box-shadow:0 14px 32px rgba(0,0,0,.5),inset 0 2px 8px rgba(118,185,0,.15);transform:rotateX(10deg) rotateY(-10deg)}
+.bm-modal-facts{display:flex;flex-direction:column;gap:8px;background:rgba(0,200,5,.04);border:1px dashed var(--line);border-radius:14px;padding:16px;margin-top:8px}
+.bm-modal-facts .row{display:flex;justify-content:space-between;font-size:13.5px;color:var(--dim)}
+.bm-modal-facts .row span:last-child{font-family:'JetBrains Mono',monospace;color:var(--text)}
+:root[data-theme="light"] .buffmania-card{background:var(--panel);box-shadow:0 12px 40px rgba(6,40,20,.1)}
+:root[data-theme="light"] .bm-badge,:root[data-theme="light"] .bm-modal-badge{background:linear-gradient(145deg,#f0f4ec,#dce5d4)}
+
+/* ===== FLOATING MEME CATS ===== */
+.buff-cat-float{position:absolute;pointer-events:none;z-index:1;will-change:transform;opacity:.9;filter:drop-shadow(0 12px 24px rgba(0,0,0,.35))}
+.bcf-bench{width:clamp(120px,14vw,200px);top:10%;right:-10px;animation:bcfBob 6s ease-in-out infinite}
+.bcf-pushup{width:clamp(110px,13vw,180px);top:8%;left:-15px;animation:bcfSway 7s ease-in-out infinite}
+.bcf-lambo{width:clamp(140px,16vw,230px);bottom:6%;right:-20px;animation:bcfDrive 8s ease-in-out infinite}
+.bcf-flex{width:clamp(100px,11vw,160px);top:12%;right:0;animation:bcfBob 5.5s ease-in-out .5s infinite}
+.bcf-flex2{width:clamp(90px,10vw,150px);bottom:10%;left:-10px;animation:bcfSpin 9s ease-in-out infinite}
+@keyframes bcfBob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-22px) rotate(4deg)}}
+@keyframes bcfSway{0%,100%{transform:translateX(0) rotate(3deg)}50%{transform:translateX(18px) rotate(-4deg)}}
+@keyframes bcfDrive{0%{transform:translateX(30px) rotate(2deg)}50%{transform:translateX(-10px) rotate(-2deg)}100%{transform:translateX(30px) rotate(2deg)}}
+@keyframes bcfSpin{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-16px) rotate(6deg)}}
+@media(max-width:820px){.bcf-bench,.bcf-lambo,.bcf-flex2{display:none}.bcf-pushup,.bcf-flex{width:90px;opacity:.7}}
+@media(prefers-reduced-motion:reduce){.buff-cat-float{animation:none!important}}
+.mine-hero{position:relative}
+.buffmania-hero-card{position:absolute;top:0;right:0;z-index:5;width:min(300px,80vw);border:1px solid rgba(255,172,58,.4);border-radius:20px;padding:18px;background:linear-gradient(160deg,rgba(20,25,20,.96),rgba(6,8,11,.98));box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 40px rgba(255,172,58,.12);animation:maniaPulse 3s ease-in-out infinite}
+@keyframes maniaPulse{0%,100%{box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 40px rgba(255,172,58,.12)}50%{box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 60px rgba(255,172,58,.25)}}
+.bmh-tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-hot);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.bmh-body{display:flex;gap:14px;align-items:center}
+.bmh-badge{flex-shrink:0;width:72px;height:72px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:linear-gradient(145deg,#1a1f16,#0a0d08);border:2px solid rgba(118,185,0,.5);box-shadow:0 8px 20px rgba(0,0,0,.5),inset 0 2px 6px rgba(118,185,0,.15);transform:rotateX(10deg) rotateY(-12deg);animation:bmhFloat 4s ease-in-out infinite}
+@keyframes bmhFloat{0%,100%{transform:rotateX(10deg) rotateY(-12deg) translateY(0)}50%{transform:rotateX(10deg) rotateY(-12deg) translateY(-6px)}}
+.bmh-badge .t{font-family:'Unbounded',sans-serif;font-weight:900;font-size:18px;color:#76B900;text-shadow:0 2px 4px rgba(0,0,0,.6),0 0 14px rgba(118,185,0,.4)}
+.bmh-badge .s{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+.bmh-info .bmh-title{font-family:'Fredoka',sans-serif;font-weight:700;font-size:15px;color:var(--text);margin-bottom:2px}
+.bmh-info .bmh-sub{font-size:11.5px;color:var(--dim);line-height:1.4;margin-bottom:8px}
+.bmh-btn{font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--gold-hot);background:none;border:none;cursor:pointer;padding:0}
+.bmh-btn:hover{text-decoration:underline}
+@media(max-width:900px){.buffmania-hero-card{position:static;width:100%;margin-top:20px;animation:none}}
+:root[data-theme="light"] .buffmania-hero-card{background:#fff;border-color:rgba(154,107,18,.35)}
+:root[data-theme="light"] .buffmania-hero-card .bmh-title{color:#0C1A10}
+
+/* ===== FLOATING MEME CATS ===== */
+.buff-cat-float{position:absolute;pointer-events:none;z-index:1;will-change:transform;opacity:.9;filter:drop-shadow(0 12px 24px rgba(0,0,0,.35))}
+.bcf-bench{width:clamp(120px,14vw,200px);top:10%;right:-10px;animation:bcfBob 6s ease-in-out infinite}
+.bcf-pushup{width:clamp(110px,13vw,180px);top:8%;left:-15px;animation:bcfSway 7s ease-in-out infinite}
+.bcf-lambo{width:clamp(140px,16vw,230px);bottom:6%;right:-20px;animation:bcfDrive 8s ease-in-out infinite}
+.bcf-flex{width:clamp(100px,11vw,160px);top:12%;right:0;animation:bcfBob 5.5s ease-in-out .5s infinite}
+.bcf-flex2{width:clamp(90px,10vw,150px);bottom:10%;left:-10px;animation:bcfSpin 9s ease-in-out infinite}
+@keyframes bcfBob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-22px) rotate(4deg)}}
+@keyframes bcfSway{0%,100%{transform:translateX(0) rotate(3deg)}50%{transform:translateX(18px) rotate(-4deg)}}
+@keyframes bcfDrive{0%{transform:translateX(30px) rotate(2deg)}50%{transform:translateX(-10px) rotate(-2deg)}100%{transform:translateX(30px) rotate(2deg)}}
+@keyframes bcfSpin{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-16px) rotate(6deg)}}
+@media(max-width:820px){.bcf-bench,.bcf-lambo,.bcf-flex2{display:none}.bcf-pushup,.bcf-flex{width:90px;opacity:.7}}
+@media(prefers-reduced-motion:reduce){.buff-cat-float{animation:none!important}}
+.mine-hero{position:relative}
+.buffmania-hero-card{position:absolute;top:0;right:0;z-index:5;width:min(300px,80vw);border:1px solid rgba(255,172,58,.4);border-radius:20px;padding:18px;background:linear-gradient(160deg,rgba(20,25,20,.96),rgba(6,8,11,.98));box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 40px rgba(255,172,58,.12);animation:maniaPulse 3s ease-in-out infinite}
+@keyframes maniaPulse{0%,100%{box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 40px rgba(255,172,58,.12)}50%{box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 60px rgba(255,172,58,.25)}}
+.bmh-tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-hot);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.bmh-body{display:flex;gap:14px;align-items:center}
+.bmh-badge{flex-shrink:0;width:72px;height:72px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:linear-gradient(145deg,#1a1f16,#0a0d08);border:2px solid rgba(118,185,0,.5);box-shadow:0 8px 20px rgba(0,0,0,.5),inset 0 2px 6px rgba(118,185,0,.15);transform:rotateX(10deg) rotateY(-12deg);animation:bmhFloat 4s ease-in-out infinite}
+@keyframes bmhFloat{0%,100%{transform:rotateX(10deg) rotateY(-12deg) translateY(0)}50%{transform:rotateX(10deg) rotateY(-12deg) translateY(-6px)}}
+.bmh-badge .t{font-family:'Unbounded',sans-serif;font-weight:900;font-size:18px;color:#76B900;text-shadow:0 2px 4px rgba(0,0,0,.6),0 0 14px rgba(118,185,0,.4)}
+.bmh-badge .s{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)}
+.bmh-info .bmh-title{font-family:'Fredoka',sans-serif;font-weight:700;font-size:15px;color:var(--text);margin-bottom:2px}
+.bmh-info .bmh-sub{font-size:11.5px;color:var(--dim);line-height:1.4;margin-bottom:8px}
+.bmh-btn{font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--gold-hot);background:none;border:none;cursor:pointer;padding:0}
+.bmh-btn:hover{text-decoration:underline}
+@media(max-width:900px){.buffmania-hero-card{position:static;width:100%;margin-top:20px;animation:none}}
+:root[data-theme="light"] .buffmania-hero-card{background:#fff;border-color:rgba(154,107,18,.35)}
+:root[data-theme="light"] .buffmania-hero-card .bmh-title{color:#0C1A10}
+
+/* ===== cat placement fix: behind content, out of card areas ===== */
+.buff-cat-float{ z-index:0 !important; }
+.mine-step, .mine-form-card, .mine-trust-card, .mine-position, .buffmania-card{ position:relative; z-index:2; }
+.bcf-flex2{ bottom:-20px !important; left:-40px !important; }
+.bcf-lambo{ bottom:-30px !important; right:-40px !important; }
+.bcf-bench{ top:-20px !important; right:-30px !important; }
+.bcf-pushup{ top:-15px !important; left:-40px !important; }
+.bcf-flex{ top:-10px !important; right:-30px !important; }

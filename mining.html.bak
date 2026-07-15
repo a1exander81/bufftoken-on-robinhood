@@ -6,9 +6,8 @@
   <title>Buff Cat Mining — Lock $BUFFCAT, Earn Dividends</title>
   <meta name="description" content="Buy miners with $BUFFCAT, choose a lock tier, and earn a share of a transparent, capped reward stream on Robinhood Chain." />
   <link rel="icon" type="image/png" href="assets/buffcircle.png" />
-  <script src="theme.js"></script>
-  <link rel="stylesheet" href="buffcat-robinhood.css?v=20260715o" />
-  <link rel="stylesheet" href="mining.css?v=20260715o" />
+  <link rel="stylesheet" href="buffcat-robinhood.css?v=20260714a" />
+  <link rel="stylesheet" href="mining.css?v=1" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -25,7 +24,6 @@
       <a href="index.html">Home</a>
       <a href="index.html#community">Community</a>
       <button class="nav-cta" data-connect-wallet id="connectWallet">Connect Wallet</button>
-      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">🌙</button>
     </div>
   </nav>
 
@@ -34,18 +32,7 @@
 
       <!-- Hero -->
       <section class="mine-hero">
-        <div class="buffmania-hero-card">
-          <div class="bmh-tag">🏋️ BUFF'mania of the week</div>
-          <div class="bmh-body">
-            <div class="bmh-badge"><span class="t">NVDA</span><span class="s">tokenized</span></div>
-            <div class="bmh-info">
-              <div class="bmh-title">NVDA — Tokenized</div>
-              <div class="bmh-sub">This week's heavy lift. Lock in, earn NVDA.</div>
-              <button class="bmh-btn" id="buffmaniaBtn">See the lift →</button>
-            </div>
-          </div>
-        </div>
-        <span class="mine-live-badge" style="border-color:rgba(255,172,58,.35);background:rgba(255,172,58,.1);color:var(--gold-hot)"><span class="live-dot"></span> Coming soon</span>
+        <span class="mine-live-badge"><span class="live-dot"></span> Mining is live</span>
         <h1>Buy miners. Lock a tier. <span class="up">Earn real dividends.</span></h1>
         <p class="lede">Every miner is $BUFFCAT you lock into the contract. The longer you lock it, the bigger your share of the reward stream — funded from a published, capped emission schedule, never from other users' deposits.</p>
 
@@ -72,7 +59,6 @@
       <!-- How it works -->
       <section class="mine-section">
         <h2>How mining works</h2>
-        <img class="buff-cat-float bcf-bench" src="assets/buff-bench.png" alt="" aria-hidden="true" />
         <p class="section-sub">No literal hardware, no electricity bill — "mining" here means locking $BUFFCAT into the contract to claim a share of its reward stream. Pick your commitment, the contract handles the rest.</p>
         <div class="mine-steps">
           <div class="mine-step">
@@ -95,7 +81,6 @@
 
       <!-- Buy panel -->
       <section class="mine-section" id="buy">
-        <img class="buff-cat-float bcf-pushup" src="assets/buff-pushup.png" alt="" aria-hidden="true" />
         <h2>Buy miners</h2>
         <p class="section-sub">Choose a lock tier and amount. The breakdown below updates live before you sign anything.</p>
 
@@ -149,7 +134,6 @@
       <!-- Your miners -->
       <section class="mine-section">
         <h2>Your miners</h2>
-        <img class="buff-cat-float bcf-lambo" src="assets/buff-lambo.png" alt="" aria-hidden="true" />
         <p class="section-sub">Every position you've opened, its lock status, and what it's earning.</p>
 
         <div class="mine-claim-card">
@@ -165,33 +149,6 @@
         </div>
       </section>
 
-      <!-- ============ FARMING / BUFF'MANIA ============ -->
-      <section class="mine-section" id="farming">
-        <img class="buff-cat-float bcf-flex" src="assets/buff-flex.png" alt="" aria-hidden="true" />
-        <span class="mine-live-badge" style="border-color:rgba(255,172,58,.35);background:rgba(255,172,58,.1);color:var(--gold-hot)">🏋️ Farming — BUFF'mania</span>
-        <h2>BUFF'mania <span class="up">of the Week</span></h2>
-        <p class="section-sub">Every week the cat picks one pair to go heavy on. Lock in, opt into the featured reward, and earn it while it's in rotation. This week the cat is repping tokenized equities.</p>
-        <div class="buffmania-card" id="buffmaniaCard">
-          <div class="bm-badge-wrap">
-            <div class="bm-badge" aria-label="NVDA tokenized stock">
-              <span class="bm-badge-ticker">NVDA</span>
-              <span class="bm-badge-sub">tokenized</span>
-            </div>
-          </div>
-          <div class="bm-copy">
-            <div class="bm-kicker">This week's heavy lift 💪</div>
-            <h3 class="bm-title">NVDA — Tokenized Stock</h3>
-            <p class="bm-desc">The cat's benching NVIDIA tokenized equity on Robinhood Chain this week. Lock your $BUFFCAT, opt into BUFF'mania, and earn NVDA-denominated rewards while it's the featured pair.</p>
-            <div class="bm-meta">
-              <div class="bm-meta-item"><span class="bm-ml">Featured reward</span><span class="bm-mv">NVDA</span></div>
-              <div class="bm-meta-item"><span class="bm-ml">Rotation ends</span><span class="bm-mv">Sunday 00:00 UTC</span></div>
-              <div class="bm-meta-item"><span class="bm-ml">Status</span><span class="bm-mv" style="color:var(--gold-hot)">Preview</span></div>
-            </div>
-            <button class="btn btn-green" id="buffmaniaBtn" type="button">See the lift →</button>
-          </div>
-        </div>
-      </section>
-
       <!-- Pairs showcase -->
       <section class="mine-section">
         <h2>What your miners are hashing</h2>
@@ -204,12 +161,11 @@
           <div class="mine-pair"><div class="pair-icon">V</div><div class="pair-name">NVDA</div><div class="pair-tag">Tokenized equity</div></div>
           <div class="mine-pair"><div class="pair-icon">B</div><div class="pair-name">$BONK</div><div class="pair-tag">Meme</div></div>
         </div>
-        <p class="mine-pairs-note">This panel is thematic — a preview of the reward pairs the miner will support. Mining isn't live yet; nothing here routes real rewards. Full details will be published with the contract before launch.</p>
+        <p class="mine-pairs-note">v1 note: this panel is thematic — it doesn't yet route rewards through live trading of these pairs. Rewards are funded by the published emission schedule described below. Real trading-fee integration is a future phase, not a claim made about today's contract.</p>
       </section>
 
       <!-- Trust / transparency -->
       <section class="mine-section" id="trust">
-        <img class="buff-cat-float bcf-flex2" src="assets/buff-flex2.png" alt="" aria-hidden="true" />
         <h2>Built to be checked, not trusted</h2>
         <p class="section-sub">Everything below is verifiable on-chain — don't take our word for it, read the contract.</p>
         <div class="mine-trust-grid">
@@ -275,16 +231,5 @@
 
   <script src="vendor/ethers-5.7.2.umd.min.js"></script>
   <script src="mining.js?v=2"></script>
-  <script>
-    (function(){
-      var b=document.getElementById('buffmaniaBtn'),m=document.getElementById('buffmaniaModal'),c=document.getElementById('buffmaniaClose');
-      function open(){if(m){m.classList.add('open');document.body.style.overflow='hidden';}}
-      function shut(){if(m){m.classList.remove('open');document.body.style.overflow='';}}
-      if(b)b.addEventListener('click',open); if(c)c.addEventListener('click',shut);
-      if(m)m.addEventListener('click',function(e){if(e.target===m)shut();});
-      window.addEventListener('keydown',function(e){if(e.key==='Escape')shut();});
-    })();
-  </script>
-  <script src="cat-drag.js?v=2"></script>
 </body>
 </html>

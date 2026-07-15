@@ -435,9 +435,13 @@
     card.addEventListener('mouseleave', () => gsap.to(card, {rotateY:0, rotateX:0, duration:0.6}));
   });
 
+  const creedLit = () => document.documentElement.getAttribute('data-theme') === 'light'
+    ? 'rgba(12,26,16,1)' : 'rgba(234,242,236,1)';
+  const creedDim = () => document.documentElement.getAttribute('data-theme') === 'light'
+    ? 'rgba(12,26,16,.35)' : 'rgba(234,242,236,.2)';
   document.querySelectorAll('.creed-line').forEach(line => {
-    gsap.fromTo(line, {color:'rgba(234,242,236,.2)'}, {
-      color:'rgba(234,242,236,1)',
+    gsap.fromTo(line, {color:creedDim()}, {
+      color:creedLit(),
       scrollTrigger:{trigger:line, start:'top 75%', end:'top 45%', scrub:true}
     });
   });
