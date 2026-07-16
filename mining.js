@@ -19,26 +19,31 @@
   };
 
   const BPS_DENOM = 10000;
-  const BUY_FEE_BPS = 200; // 1% LP + 1% eco; platform fee is a fixed ETH amount read from the contract
+  // Flat ETH lock fee (NOT a % of BUFFCAT). Read live from the contract's
+  // buyFeeWei() getter; that ETH is split 25/40/15/20 inside the contract.
+  const DEFAULT_BUY_FEE_ETH = 0.003;          // mirrors contract initializer (~$5)
+  let   buyFeeEthValue = DEFAULT_BUY_FEE_ETH;  // number, for display
+  let   buyFeeWei = null;                       // BigNumber, for msg.value
+  let   selectedChoice = 0;                     // dividend asset: 0=ETH 1=USDG 2=FEATURED (real selector = TODO)
   const WITHDRAW_FEE_BPS = 300;
   const EARLY_EXIT_FEE_BPS = 1000;
-  const TIER_LABELS = ["24 Hours", "3 Days", "1 Week", "1 Month"];
-  const TIER_DURATION_SEC = [86400, 3 * 86400, 7 * 86400, 30 * 86400];
-  const TIER_MULT_BPS = [10000, 12000, 15000, 20000];
+  // 7 tiers, values copied directly from BuffCatMiner.sol (TIER_DURATION / TIER_MULT_BPS)
+  const TIER_LABELS = ["1 Day", "3 Days", "1 Week", "1 Month", "1 Year", "10 Years", "100 Years"];
+  const TIER_DURATION_SEC = [86400, 3*86400, 7*86400, 30*86400, 365*86400, 3650*86400, 36500*86400];
+  const TIER_MULT_BPS = [10000, 12500, 16000, 22000, 35000, 50000, 60000];
 
   const MINER_ABI = [
-    "function buyMiners(uint256 amount, uint8 tier) payable",
-    "function buyFeeEth() view returns (uint256)",
-    "function claimDividends()",
-    "function unstake(uint256 positionId)",
-    "function positions(address,uint256) view returns (uint256 principal, uint256 hashpower, uint64 unlockTime, uint8 tier, bool active)",
-    "function positionsLength(address) view returns (uint256)",
-    "function pendingRewards(address) view returns (uint256)",
-    "function tierInfo(uint8) view returns (uint64 duration, uint256 multiplierBps)",
+    "function lock(uint256 amount, uint8 tier, uint8 choice) payable",
+    "function buyFeeWei() view returns (uint256)",
+    "function claim(uint256 posId)",
+    "function unlock(uint256 posId)",
+    "function positions(address,uint256) view returns (uint128 principal, uint128 hashpower, uint64 lockTime, uint64 unlockTime, uint8 tier, uint8 choice, bool active, uint256 ethDebt, uint256 usdgDebt, uint256 featDebt, uint256 buffDebt)",
+    "function positionCount(address) view returns (uint256)",
+    "function pendingRewards(address,uint256) view returns (uint256 eth, uint256 usdg, uint256 feat)",
+    "function usdgToken() view returns (address)",
+    "function featuredToken() view returns (address)",
     "function totalHashpower() view returns (uint256)",
-    "function totalPrincipalLocked() view returns (uint256)",
-    "function rewardRate() view returns (uint256)",
-    "function rewardPeriodFinish() view returns (uint256)",
+    "function totalPrincipal() view returns (uint256)",
     "function paused() view returns (bool)",
   ];
   const TOKEN_ABI = [
@@ -51,7 +56,6 @@
   const el = (id) => document.getElementById(id);
   const connectBtns = Array.from(document.querySelectorAll("[data-connect-wallet]"));
   const buyBtn = el("buyBtn");
-  const claimBtn = el("claimBtn");
   const amountInput = el("buyAmount");
   const maxBtn = el("maxBtn");
   const tierPicker = el("tierPicker");
@@ -160,20 +164,29 @@
     });
   }
 
+  async function loadBuyFee() {
+    if (!hasContract) { buyFeeWei = null; buyFeeEthValue = DEFAULT_BUY_FEE_ETH; return updateBreakdown(); }
+    try {
+      buyFeeWei = await minerContract(false).buyFeeWei();
+      buyFeeEthValue = parseFloat(ethers.utils.formatEther(buyFeeWei));
+    } catch (_) { buyFeeWei = null; buyFeeEthValue = DEFAULT_BUY_FEE_ETH; }
+    updateBreakdown();
+  }
+
   function updateBreakdown() {
     const raw = parseFloat(amountInput.value || "0");
     const amount = isFinite(raw) && raw > 0 ? raw : 0;
-    const fee = (amount * BUY_FEE_BPS) / BPS_DENOM;
-    const half = fee / 2;
-    const principal = amount - fee;
+    // Fee is a FLAT ETH amount (buyFeeWei), paid on top of the lock — it is NOT
+    // skimmed from the BUFFCAT you lock. 100% of `amount` is principal, returned
+    // at unlock. The ETH fee is split 25/40/15/20 inside the contract.
+    const principal = amount;
     const hashpower = (principal * TIER_MULT_BPS[selectedTier]) / BPS_DENOM;
 
-    el("bdFee").textContent = fee.toFixed(4);
-    el("bdLp").textContent = half.toFixed(4);
-    el("bdOwner").textContent = "fixed ETH fee";
-    el("bdEco").textContent = half.toFixed(4);
+    el("bdFee").textContent = buyFeeEthValue.toFixed(4) + " ETH";
     el("bdPrincipal").textContent = principal.toFixed(4);
     el("bdHashpower").textContent = hashpower.toFixed(4);
+    // NOTE: bdLp / bdOwner / bdEco rows in mining.html no longer map to reality —
+    // there is no token-side LP/eco skim. Update or remove those rows.
   }
 
   if (amountInput) amountInput.addEventListener("input", updateBreakdown);
@@ -237,8 +250,9 @@
         }
         buyBtn.textContent = "Confirm in wallet…";
         const miner = minerContract(true);
-        const ethFee = await minerContract(false).buyFeeEth();
-        const tx2 = await miner.buyMiners(amountWei, selectedTier, { value: ethFee });
+        const feeWei = await minerContract(false).buyFeeWei();
+        // contract fn is lock(amount, tier, choice); choice 0=ETH 1=USDG 2=FEATURED
+        const tx2 = await miner.lock(amountWei, selectedTier, selectedChoice, { value: feeWei });
         buyBtn.textContent = "Buying…";
         await tx2.wait();
         amountInput.value = "";
@@ -253,44 +267,9 @@
     });
   }
 
-  // ---------------------------------------------------------------------
-  // Claim
-  // ---------------------------------------------------------------------
-  async function refreshClaim() {
-    if (!userAddress || !hasContract) {
-      claimBtn.textContent = userAddress ? "Mining contract coming soon" : "Connect wallet to claim";
-      claimBtn.disabled = !userAddress ? false : true;
-      el("pendingRewards").textContent = "0.0000 $BUFFCAT";
-      return;
-    }
-    try {
-      const pending = await minerContract(false).pendingRewards(userAddress);
-      el("pendingRewards").textContent = `${fmt(pending)} $BUFFCAT`;
-      claimBtn.disabled = pending.isZero();
-      claimBtn.textContent = pending.isZero() ? "Nothing to claim" : `Claim (−3% fee)`;
-    } catch (err) {
-      console.error("pendingRewards read failed", err);
-    }
-  }
-
-  if (claimBtn) {
-    claimBtn.addEventListener("click", async () => {
-      if (!userAddress) return connectWallet();
-      if (!hasContract) return;
-      try {
-        claimBtn.disabled = true;
-        claimBtn.textContent = "Confirm in wallet…";
-        const tx = await minerContract(true).claimDividends();
-        await tx.wait();
-        await refreshAll();
-      } catch (err) {
-        console.error("Claim failed", err);
-        alert(err?.reason || err?.message || "Transaction failed.");
-      } finally {
-        await refreshClaim();
-      }
-    });
-  }
+  // Claiming is now per-position: the contract's claim(posId) pays out
+  // whichever asset (ETH / USDG / Featured) that specific position's holder
+  // chose at lock time. See the per-card Claim button inside renderPositions().
 
   // ---------------------------------------------------------------------
   // Positions list
@@ -307,6 +286,26 @@
     return `${m}m left`;
   }
 
+  const CHOICE_LABELS = ["ETH", "USDG", "Featured"];
+  let usdgDecimals = null;
+  let featuredDecimals = null;
+
+  async function fetchTokenDecimals(addr) {
+    if (!addr || addr === ethers.constants.AddressZero) return 18;
+    try {
+      const c = new ethers.Contract(addr, ["function decimals() view returns (uint8)"], provider);
+      return await c.decimals();
+    } catch (_) {
+      return 18; // unresolved — treated as 18, flag for manual verification
+    }
+  }
+
+  function formatChoiceAmount(choiceIdx, pendEth, pendUsdg, pendFeat) {
+    if (choiceIdx === 0) return `${ethers.utils.formatEther(pendEth)} ETH`;
+    if (choiceIdx === 1) return `${ethers.utils.formatUnits(pendUsdg, usdgDecimals ?? 18)} USDG`;
+    return `${ethers.utils.formatUnits(pendFeat, featuredDecimals ?? 18)} Featured`;
+  }
+
   async function renderPositions() {
     if (!positionsList) return;
     if (!userAddress) {
@@ -319,26 +318,51 @@
     }
     try {
       const miner = minerContract(false);
-      const len = (await miner.positionsLength(userAddress)).toNumber();
+      const len = (await miner.positionCount(userAddress)).toNumber();
       if (len === 0) {
         positionsList.innerHTML = `<div class="mine-empty">No miners yet — buy your first one above.</div>`;
         return;
       }
+
+      const rawPositions = [];
+      for (let i = 0; i < len; i++) rawPositions.push(await miner.positions(userAddress, i));
+
+      // Resolve USDG/Featured decimals once, lazily, only if some active position needs them.
+      const needsUsdg = rawPositions.some((p) => p.active && p.choice === 1);
+      const needsFeatured = rawPositions.some((p) => p.active && p.choice === 2);
+      if (needsUsdg && usdgDecimals === null) {
+        try { usdgDecimals = await fetchTokenDecimals(await miner.usdgToken()); } catch (_) { usdgDecimals = 18; }
+      }
+      if (needsFeatured && featuredDecimals === null) {
+        try { featuredDecimals = await fetchTokenDecimals(await miner.featuredToken()); } catch (_) { featuredDecimals = 18; }
+      }
+
       const rows = [];
       for (let i = 0; i < len; i++) {
-        const pos = await miner.positions(userAddress, i);
+        const pos = rawPositions[i];
         if (!pos.active) continue;
         const unlockTime = pos.unlockTime.toNumber ? pos.unlockTime.toNumber() : Number(pos.unlockTime);
         const matured = Math.floor(Date.now() / 1000) >= unlockTime;
+
+        let pendingLine = "Pending: —";
+        try {
+          const [pendEth, pendUsdg, pendFeat] = await miner.pendingRewards(userAddress, i);
+          pendingLine = `Pending: ${formatChoiceAmount(pos.choice, pendEth, pendUsdg, pendFeat)}`;
+        } catch (err) {
+          console.error("pendingRewards read failed", err);
+        }
+
         rows.push(`
           <div class="mine-position">
             <div class="pp-main">
               <div class="pp-amount">${fmt(pos.principal)} $BUFFCAT</div>
               <div class="pp-meta">${TIER_LABELS[pos.tier]} · hashpower ${fmt(pos.hashpower)} · ${countdown(unlockTime)}</div>
+              <div class="pp-meta">${pendingLine} (${CHOICE_LABELS[pos.choice]}) · + any BUFFCAT penalty-bonus, revealed on claim</div>
             </div>
             <div class="pp-status ${matured ? "matured" : "locked"}">${matured ? "Matured" : "Locked"}</div>
             <div class="pp-actions">
-              <button data-unstake="${i}" data-early="${!matured}">${matured ? "Unstake" : "Unstake early (−10%)"}</button>
+              <button data-claim="${i}">Claim ${CHOICE_LABELS[pos.choice]}</button>
+              <button data-unlock="${i}" data-early="${!matured}">${matured ? "Unlock" : "Unlock early (−10%)"}</button>
             </div>
           </div>
         `);
@@ -347,21 +371,38 @@
         ? rows.join("")
         : `<div class="mine-empty">No active miners — buy your first one above.</div>`;
 
-      Array.from(positionsList.querySelectorAll("[data-unstake]")).forEach((btn) => {
+      Array.from(positionsList.querySelectorAll("[data-claim]")).forEach((btn) => {
         btn.addEventListener("click", async () => {
-          const id = parseInt(btn.dataset.unstake, 10);
+          const id = parseInt(btn.dataset.claim, 10);
+          try {
+            btn.disabled = true;
+            btn.textContent = "Confirm in wallet…";
+            const tx = await minerContract(true).claim(id);
+            await tx.wait();
+            await refreshAll();
+          } catch (err) {
+            console.error("Claim failed", err);
+            alert(err?.reason || err?.message || "Transaction failed.");
+            await renderPositions();
+          }
+        });
+      });
+
+      Array.from(positionsList.querySelectorAll("[data-unlock]")).forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = parseInt(btn.dataset.unlock, 10);
           const early = btn.dataset.early === "true";
-          if (early && !confirm("This position hasn't matured yet. Unstaking now costs a 10% early-exit penalty. Continue?")) {
+          if (early && !confirm("This position hasn't matured yet. Unlocking now costs a 10% early-exit penalty. Continue?")) {
             return;
           }
           try {
             btn.disabled = true;
             btn.textContent = "Confirm in wallet…";
-            const tx = await minerContract(true).unstake(id);
+            const tx = await minerContract(true).unlock(id);
             await tx.wait();
             await refreshAll();
           } catch (err) {
-            console.error("Unstake failed", err);
+            console.error("Unlock failed", err);
             alert(err?.reason || err?.message || "Transaction failed.");
             await renderPositions();
           }
@@ -380,22 +421,22 @@
     if (!hasContract) {
       el("statTVL").textContent = "—";
       el("statHashpower").textContent = "—";
-      el("statRewardRate").textContent = "—";
+      el("statLockFee").textContent = "—";
       return;
     }
     try {
       const miner = minerContract(false);
-      const [tvl, hashpower, rate, finish] = await Promise.all([
-        miner.totalPrincipalLocked(),
+      // The contract has no pooled/continuous "reward rate" — it pays ETH,
+      // USDG, and a featured token via a per-position accumulator. Showing
+      // the flat lock fee here instead: a real, globally-readable number.
+      const [tvl, hashpower, feeWei] = await Promise.all([
+        miner.totalPrincipal(),
         miner.totalHashpower(),
-        miner.rewardRate(),
-        miner.rewardPeriodFinish(),
+        miner.buyFeeWei(),
       ]);
       el("statTVL").textContent = `${fmt(tvl)} $BUFFCAT`;
       el("statHashpower").textContent = fmt(hashpower);
-      const finishNum = finish.toNumber ? finish.toNumber() : Number(finish);
-      const active = finishNum > Math.floor(Date.now() / 1000);
-      el("statRewardRate").textContent = active ? `${fmt(rate.mul(86400))} $BUFFCAT/day` : "No active stream";
+      el("statLockFee").textContent = `${ethers.utils.formatEther(feeWei)} ETH`;
     } catch (err) {
       console.error("refreshStats failed", err);
     }
@@ -411,12 +452,12 @@
         /* ignore */
       }
     }
-    await Promise.all([refreshStats(), refreshClaim(), renderPositions(), refreshBuyButton()]);
+    await Promise.all([refreshStats(), loadBuyFee(), renderPositions(), refreshBuyButton()]);
   }
 
   refreshStats();
+  loadBuyFee();
   refreshBuyButton();
-  refreshClaim();
   renderPositions();
 
   // Keep countdowns fresh without re-hitting the chain every tick.

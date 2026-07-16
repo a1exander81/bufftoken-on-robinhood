@@ -1,116 +1,71 @@
-# BuffCatMiner contracts
+# BuffCatMiner — Contracts (v2: oracle removed, flat fee)
 
-## Setup
+Lock BUFFCAT, earn ETH/USDG/featured dividends. Principal always returned in full.
+Fee is a FLAT ETH amount (owner-adjustable, hard-capped) — no oracle, no in-contract
+swap. Validated against a live reference contract on Robinhood Chain
+(0x56910D4409F3a0C78C64DD8D0545FF0705389870) that uses the same fee->distribute
+pattern for its NVDA dividend.
 
-```
-cd contracts
-npm install
-npx hardhat compile
-npx hardhat test
-```
+## Files
+- `src/BuffCatMiner.sol` — main contract (~440 lines)
+- `src/PriceGuard.sol.unused` — Chainlink oracle reader, NOT currently used.
+  Kept in case a future version wants dollar-pegged fees. Rename to .sol and
+  re-integrate if needed (see chat history for the wiring).
+- `test/` — 20 tests: core, attacks, hostile-token, featured, compound, invariants
 
-If `npx hardhat compile` fails to reach `binaries.soliditylang.org` (e.g. in a
-network-restricted sandbox), use the offline config, which compiles with the
-`solc` package from `node_modules` instead of downloading a compiler:
-
-```
-npx hardhat --config hardhat.config.offline.js test
-```
-
-On a normal machine with open internet access this isn't necessary; Hardhat
-downloads the compiler itself.
-
-## Deploying
-
-```
-ADMIN_ADDRESS=0x... \
-DEPLOYER_PRIVATE_KEY=0x... \
-npx hardhat run scripts/deploy.js --network robinhoodChain
-```
-
-`scripts/deploy.js` defaults the token/fee-wallet addresses to the ones
-already in use on the live site. Override any of them with
-`BUFFCAT_TOKEN_ADDRESS`, `LP_WALLET_ADDRESS`, `OWNER_FEE_WALLET_ADDRESS`,
-`ECO_WALLET_ADDRESS` if they ever change.
-
-ETH fee economics (also env-overridable): `BUY_FEE_ETH` (default `0.0005`,
-the fixed ETH charged per buy), `LP_ETH_THRESHOLD` (default `0.25`) and
-`LP_ETH_INTERVAL_DAYS` (default `7`) — the reserve release rule.
-
-## Verifying on the explorer (Blockscout)
-
-Verification publishes the source code on
-[robinhoodchain.blockscout.com](https://robinhoodchain.blockscout.com) so
-anyone can read the contract and use the explorer's Read/Write tabs. The
-eight arguments must be exactly the ones printed by the deploy script:
-
-```
-npx hardhat verify --network robinhoodChain <MINER_ADDRESS> \
-  <BUFFCAT_TOKEN> <LP_WALLET> <OWNER_FEE_WALLET> <ECO_WALLET> <ADMIN> \
-  <BUY_FEE_ETH_WEI> <LP_ETH_THRESHOLD_WEI> <LP_ETH_INTERVAL_SECONDS>
+## Setup on your Mac
+```bash
+cd ~/Desktop/bufftoken-on-robinhood
+git checkout main && git pull && git checkout -b feature/buffcat-miner
+mkdir -p contracts && cd contracts
+forge init . --force --no-git
+forge install OpenZeppelin/openzeppelin-contracts --no-git
+forge install foundry-rs/forge-std --no-git
+printf '@openzeppelin/=lib/openzeppelin-contracts/\nforge-std/=lib/forge-std/src/\n' > remappings.txt
+# copy the src/BuffCatMiner.sol and test/*.sol files from this folder in
+forge test          # should show 20 passing
+forge test --match-path test/Invariant.t.sol -vvv   # 128k-call solvency fuzz
 ```
 
-With the current defaults from `scripts/deploy.js` (replace the miner
-address and admin with your own; the last three are 0.0005 ETH, 0.25 ETH
-and 7 days expressed in wei/seconds):
-
-```
-npx hardhat verify --network robinhoodChain 0xYOUR_MINER_ADDRESS \
-  0xD80aFe3Be875a14155FDd96D39669A6734E12036 \
-  0x78a851D19E2152bB7162d8924CB2Bd088aca95C8 \
-  0xc2413696576176d1e31D55a2DEdA609906a15596 \
-  0x13864051772FDFBce895d21a483eee02edaeB445 \
-  0xYOUR_ADMIN_ADDRESS \
-  500000000000000 250000000000000000 604800
+## Then — Slither (runs cleanly on your Mac, not in a sandbox)
+```bash
+pip3 install slither-analyzer
+slither src/BuffCatMiner.sol
 ```
 
-Once verified, the contract page shows a green check, the full source, and
-"Read Contract" / "Write Contract" tabs — that's what the mining guide's
-explorer instructions rely on.
+## Model (confirmed, simplified)
+- Lock BUFFCAT (returned 100% at unlock)
+- FLAT ETH platform fee (buyFeeWei, default 0.003 ETH ~ $5).
+  Owner can adjust within hard bounds: 0.0005–0.05 ETH. No oracle.
+- Split: 25 buyback / 40 dividends / 15 platform / 20 eco
+- Tiers: Tourist 1d 1.0x / GymTrial 3d 1.25x / Member 7d 1.6x / Beast 30d 2.2x /
+  DiamondPaws 1y 3.5x / Chad 10y 5.0x / Ascended 100y 6.0x
+- Dividends: ETH / USDG / featured (BUFF'mania) — investor picks
+- Featured (e.g. NVDA): owner manually buys NVDA with buyback ETH, calls
+  fundFeatured() to deposit it. 1.3x bonus, snapshot-gated (front-run proof).
+  Validated: NVDA is contract-transferable (see reference contract).
+- Compound: 2% fee, preserves pending, mining-power credit
+- Early exit: 10% penalty -> 70% stayers / 15% platform / 15% buyback
+- Min-hold 24h before dividends accrue
+- MAX_LOCK cap: 30M tokens per position (TVL control)
 
-After deploying:
-1. Verify the contract on the Robinhood Chain explorer (see above).
-2. As the admin wallet, `approve` BUFFCAT to the contract and call
-   `notifyRewardAmount(amount, durationSeconds)` to open the first reward
-   stream — the dashboard shows "No active stream" until this happens.
-3. Put the deployed address into `MINER_ADDRESS` at the top of `mining.js`
-   in the repo root. The dashboard runs in read-only "preview mode" until
-   that's set.
+## Validated token addresses (Robinhood Chain)
+- WETH: 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73
+- USDG: 0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168 (Global Dollar, Paxos)
+- NVDA: 0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC (NVIDIA Tokenized Stock)
+  Note: ERC-8056 scaled-UI token, uiMultiplier() currently 1.0 for all live
+  stock tokens. Balance-delta accounting in the miner handles this correctly.
 
-## Design notes / assumptions made
+## Wallets (immutable at deploy)
+- Deployer/Owner: 0xc2413696576176d1e31D55a2DEdA609906a15596
+- Buyback:  0xEBFB19E12810039Fba51fABe9D45Fdd8A8342707
+- Platform: 0x640e846504b8b179885E36fF9FcC353Bf08F4b1F
+- Eco:      0x13864051772FDFBce895d21a483eee02edaeB445
+- Dividends: stay in-contract
 
-- **"1% goes to LP then burn"**: the contract sends that 1% directly to the
-  given LP wallet as plain BUFFCAT. It does not perform an on-chain
-  swap-and-add-liquidity-then-burn-the-LP-token sequence — that pattern
-  (popularized by SafeMoon-style tokens) depends on trusting a DEX router at
-  transaction time and is a well-documented source of sandwich/MEV and
-  accounting bugs. If you want liquidity added and the LP token burned, do
-  it as a manual or multisig-controlled treasury operation from that wallet.
-- **Reward funding**: rewards come from `notifyRewardAmount`, called by the
-  admin wallet with tokens it already holds/approves, plus forfeited
-  principal from early exits. Nothing is funded by other users' deposits.
-- **"Pre-selected pairs" (memes, tokenized SPCX/NVDA, etc.)**: v1 is a
-  themed display only on the mining page. The contract does not trade or
-  weight yield by those pairs' prices. Wiring real oracle-driven yield to
-  specific pairs is a separate, larger project (needs a reliable price feed
-  per asset and defenses against oracle manipulation) — don't market it as
-  live until it's actually built.
-- **Early exit (10%)**: 3% follows the standard buy/withdraw fee split
-  (1% LP, 1% platform, 1% eco); the remaining 7% is injected into the
-  live reward stream for stakers who keep their lock, funded entirely by
-  the exiting user's own forfeited principal.
-- **Owner powers are deliberately minimal**: fund the reward stream, pause
-  new deposits. There is no function that can move user principal or
-  already-committed reward funds, and fee wallets/percentages are immutable
-  constructor args, not owner-settable.
-- **ETH platform fee + automated LP reserve**: every buy pays a fixed ETH fee
-  (immutable constructor arg). Half accrues for the platform wallet
-  (`withdrawPlatformEth`, callable by anyone, pull-payment so a broken wallet
-  can never block buys); half accrues in `lpEthReserve`. The reserve is
-  released by `releaseLpEth` under a fixed on-chain rule — the entire reserve,
-  as soon as it reaches `lpEthReleaseThreshold` OR `lpEthReleaseInterval` has
-  elapsed since the last release. Both functions are permissionless because
-  the destinations are immutable. The contract intentionally does NOT call a
-  DEX router to add the liquidity itself: in-transaction pool adds are
-  sandwich/MEV bait and can be primed with flash-loan price manipulation. The
-  final add-liquidity step stays a deliberate action from the LP wallet.
+## STILL TODO before mainnet
+- Run Slither on Mac
+- Deploy to TESTNET first, verify on Blockscout
+- Test NVDA fund/distribute end-to-end on testnet (confirm no transfer gates)
+- Human audit (Claude review != audit)
+- Never rush a contract holding user funds
