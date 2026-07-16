@@ -108,6 +108,9 @@ contract BuffCatMiner is ReentrancyGuard, Ownable, Pausable {
     event Compounded(address indexed user, uint256 posId, uint256 added);
     event FeaturedSet(address indexed token, uint64 weekStart);
     event DividendFunded(uint256 ethAmount);
+    event UsdgDividendFunded(uint256 amount);
+    event FeaturedFunded(uint256 amount);
+    event BuyFeeUpdated(uint256 newFeeWei);
 
     // ---------------------------------------------------------------
     // Errors
@@ -134,8 +137,8 @@ contract BuffCatMiner is ReentrancyGuard, Ownable, Pausable {
         address _buyback,
         address _platform,
         address _eco,
-        address _owner
-    ) Ownable(_owner) {
+        address _ownerAddr
+    ) Ownable(_ownerAddr) {
         if (_buffcat == address(0) || _buyback == address(0) ||
             _platform == address(0) || _eco == address(0)) revert BadWallet();
         buffcat = IERC20(_buffcat);
@@ -405,6 +408,7 @@ contract BuffCatMiner is ReentrancyGuard, Ownable, Pausable {
     function fundUsdgDividends(uint256 amount) external onlyOwner {
         if (totalHashpower > 0) accUsdgPerShare += (amount * ACC) / totalHashpower;
         usdgToken.safeTransferFrom(msg.sender, address(this), amount);
+        emit UsdgDividendFunded(amount);
     }
 
     function setFeatured(address token, uint64 weekStart) external onlyOwner {
@@ -422,11 +426,13 @@ contract BuffCatMiner is ReentrancyGuard, Ownable, Pausable {
         if (featuredHashpower == 0) revert FeaturedNotSet();
         accFeaturedPerShare += (amount * ACC) / featuredHashpower;
         featuredToken.safeTransferFrom(msg.sender, address(this), amount);
+        emit FeaturedFunded(amount);
     }
 
     function setBuyFee(uint256 newFeeWei) external onlyOwner {
         if (newFeeWei > MAX_BUY_FEE || newFeeWei < MIN_BUY_FEE) revert Overflow();
         buyFeeWei = newFeeWei;
+        emit BuyFeeUpdated(newFeeWei);
     }
 
     function pause() external onlyOwner { _pause(); }
