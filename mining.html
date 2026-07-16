@@ -59,7 +59,7 @@
         <div class="mine-stat-strip">
           <div class="mine-stat"><div class="label">Total Value Locked</div><div class="value" id="statTVL">—</div></div>
           <div class="mine-stat"><div class="label">Total Hashpower</div><div class="value" id="statHashpower">—</div></div>
-          <div class="mine-stat"><div class="label">Reward Rate / Day</div><div class="value green" id="statRewardRate">—</div></div>
+          <div class="mine-stat"><div class="label">Lock Fee (ETH)</div><div class="value green" id="statLockFee">—</div></div>
           <div class="mine-stat"><div class="label">Your Wallet</div><div class="value" id="statWallet">Not connected</div></div>
         </div>
 
@@ -78,17 +78,17 @@
           <div class="mine-step">
             <div class="num">1</div>
             <h3>Buy miners</h3>
-            <p>Spend $BUFFCAT to open a position. A 2% token fee (liquidity + ecosystem) plus a small fixed ETH platform fee applies — the rest becomes your locked principal. Half the ETH fee auto-accrues into an on-contract liquidity reserve.</p>
+            <p>Spend $BUFFCAT to open a position — 100% of it becomes your locked principal, returned in full at unlock. A separate flat ETH fee applies per lock (paid on top, not skimmed from your BUFFCAT), split automatically 25% buyback / 40% dividends / 15% platform / 20% ecosystem.</p>
           </div>
           <div class="mine-step">
             <div class="num">2</div>
             <h3>Pick a lock tier</h3>
-            <p>24 hours, 3 days, 1 week, or 1 month. Longer locks earn a bigger multiplier on your hashpower — a larger share of the same reward stream, not a bigger total pool.</p>
+            <p>1 day up to 100 years, across 7 tiers. Longer locks earn a bigger multiplier on your hashpower — a larger share of dividends, not a bigger total pool.</p>
           </div>
           <div class="mine-step">
             <div class="num">3</div>
             <h3>Earn &amp; claim</h3>
-            <p>Rewards accrue every second based on your share of total hashpower. Claim anytime for a 3% fee, or unstake principal after maturity for free.</p>
+            <p>Dividends accrue continuously based on your share of total hashpower, paid in whichever asset you chose at lock time (ETH, USDG, or the featured token). Claiming is free. Unlocking principal after maturity is free too; unlocking early costs a 10% penalty.</p>
           </div>
         </div>
       </section>
@@ -103,24 +103,36 @@
           <div>
             <div class="mine-tiers" id="tierPicker">
               <button class="mine-tier active" data-tier="0">
-                <div class="tier-label">24 Hours</div>
+                <div class="tier-label">1 Day</div>
                 <div class="tier-mult">1.00x hashpower</div>
               </button>
               <button class="mine-tier" data-tier="1">
                 <div class="tier-label">3 Days</div>
-                <div class="tier-mult">1.20x hashpower</div>
+                <div class="tier-mult">1.25x hashpower</div>
               </button>
               <button class="mine-tier" data-tier="2">
                 <div class="tier-label">1 Week</div>
-                <div class="tier-mult">1.50x hashpower</div>
+                <div class="tier-mult">1.60x hashpower</div>
               </button>
               <button class="mine-tier" data-tier="3">
                 <div class="tier-label">1 Month</div>
-                <div class="tier-mult">2.00x hashpower</div>
+                <div class="tier-mult">2.20x hashpower</div>
+              </button>
+              <button class="mine-tier" data-tier="4">
+                <div class="tier-label">1 Year</div>
+                <div class="tier-mult">3.50x hashpower</div>
+              </button>
+              <button class="mine-tier" data-tier="5">
+                <div class="tier-label">10 Years</div>
+                <div class="tier-mult">5.00x hashpower</div>
+              </button>
+              <button class="mine-tier" data-tier="6">
+                <div class="tier-label">100 Years</div>
+                <div class="tier-mult">6.00x hashpower</div>
               </button>
             </div>
             <div class="mine-early-warning show" id="earlyWarning">
-              Unstaking <strong>before</strong> your lock matures costs a 10% early-exit penalty (3% goes to the standard fee split, 7% is redistributed to stakers who stay). Unstaking after maturity is fee-free.
+              Unlocking <strong>before</strong> your lock matures costs a 10% early-exit penalty on principal: 70% is redistributed to stakers who stay, 15% goes to platform, 15% to buyback. Unlocking after maturity is fee-free.
             </div>
           </div>
 
@@ -132,16 +144,13 @@
             </div>
 
             <div class="mine-breakdown">
-              <div class="row"><span>Token buy fee (2%)</span><span id="bdFee">0.00</span></div>
-              <div class="row"><span>&nbsp;&nbsp;→ LP / burn (1%)</span><span id="bdLp">0.00</span></div>
-              <div class="row"><span>&nbsp;&nbsp;→ Ecosystem (1%)</span><span id="bdEco">0.00</span></div>
-              <div class="row"><span>Platform fee (ETH)</span><span id="bdOwner">fixed ETH fee</span></div>
-              <div class="row total"><span>Locked principal</span><span id="bdPrincipal">0.00</span></div>
+              <div class="row"><span>Flat ETH lock fee</span><span id="bdFee">0.00</span></div>
+              <div class="row total"><span>Locked principal (100% of $BUFFCAT)</span><span id="bdPrincipal">0.00</span></div>
               <div class="row total"><span>Hashpower earned</span><span id="bdHashpower">0.00</span></div>
             </div>
 
             <button class="btn btn-green" id="buyBtn">Connect wallet to buy</button>
-            <p class="mine-form-note">Fees are fixed on-chain and cannot be changed after deployment.</p>
+            <p class="mine-form-note">The ETH lock fee can be adjusted by the contract owner, but only within fixed on-chain bounds (0.0005–0.05 ETH).</p>
           </div>
         </div>
       </section>
@@ -151,14 +160,6 @@
         <h2>Your miners</h2>
         <img class="buff-cat-float bcf-lambo" src="assets/buff-lambo.png" alt="" aria-hidden="true" />
         <p class="section-sub">Every position you've opened, its lock status, and what it's earning.</p>
-
-        <div class="mine-claim-card">
-          <div>
-            <div class="cc-label">Pending dividends</div>
-            <div class="cc-value" id="pendingRewards">0.0000 $BUFFCAT</div>
-          </div>
-          <button class="btn btn-green" id="claimBtn">Connect wallet to claim</button>
-        </div>
 
         <div class="mine-positions" id="positionsList">
           <div class="mine-empty">Connect your wallet to see your miner positions.</div>
