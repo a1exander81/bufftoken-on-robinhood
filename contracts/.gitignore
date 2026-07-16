@@ -1,0 +1,16 @@
+# Foundry build artifacts
+cache/
+out/
+broadcast/
+
+# Dependencies (see note below on whether to commit lib/)
+# lib/
+
+# Environment / secrets — NEVER commit these
+.env
+.env.*
+*.key
+secrets.json
+
+# OS junk
+.DS_Store
