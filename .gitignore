@@ -37,3 +37,4 @@ contracts/typechain-types/
 .vercel/
 mining.html.bak
 assets/orig/
+*.bak.*
