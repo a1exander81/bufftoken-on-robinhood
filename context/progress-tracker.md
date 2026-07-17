@@ -140,3 +140,13 @@ of truth; record only what is actually verified (cite tx hashes / test runs).
   `connect-src` (currently mainnet-only → testnet wallet calls would be blocked).
 - Context files still blank templates in Claude Project mirror — re-upload via
   Project settings so next session loads them.
+
+### Blockscout verification (2026-07-17)
+- Testnet BuffCatMiner (0xEcd9e1E717D6628513E1E555702ED21a222872A5) VERIFIED via
+  standard-JSON input (compiler v0.8.35+commit.47b9dedd, optimizer off).
+- Confirmed deployed bytecode matches main source: byte-identical except the
+  immutable constructor addresses, same trailing metadata hash. Source now public
+  at explorer.testnet.chain.robinhood.com.
+- Note: verified without manually pasting constructor args (Blockscout matched
+  from the deployment tx / accepted as match). If a "full match" upgrade is ever
+  wanted, re-verify with the ABI-encoded args appended.
