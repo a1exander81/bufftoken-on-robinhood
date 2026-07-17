@@ -113,3 +113,30 @@ of truth; record only what is actually verified (cite tx hashes / test runs).
   RE-UPLOADED into Claude Project settings (they're still blank templates in the
   project mirror), and the read-order instruction pasted into Project custom-
   instructions, for the anti-drift system to actually load next session.
+
+## Session — Website restructure + main merge (2026-07-17)
+
+### Completed
+- Reorganized frontend into `web/{marketing,miner,shared}` with root-absolute
+  paths; added vercel.json rewrites (`/` → marketing, `/mining` → miner) so
+  URLs are preserved. Commit 0b83989. Vercel PR-preview built green.
+- Corrected layout vs. original plan: buffcat-robinhood.css → shared (loaded by
+  both pages), cat-drag.js → miner (miner-only).
+- Merged website + miner into `main`. `BuffCatMiner.sol` had an add/add conflict
+  (main's pre-Slither copy vs. our Slither-fixed branch); resolved to OUR version
+  wholesale (carrying events UsdgDividendFunded + FeaturedFunded from 6adfc82).
+  Verified staged contract by grep before commit.
+- Gate: re-ran `forge test` post-merge = 20/20, 0 failed, incl. 3 invariants at
+  128,000 calls each, 0 reverts. Merge disturbed no behavior.
+- Remote `origin/main` landed the same content via GitHub PR #5 merge (9b8bd81);
+  confirmed byte-identical to local (empty tree diff) — no force push, local
+  fast-forwarded to match.
+
+### Open (now live in prod)
+- Mining page is live on main but points at mainnet (0x1237) where no contract
+  is deployed — /mining reaches a dead address. Not a fund risk, but a broken
+  public surface. Before promoting: repoint mining.js to testnet (chainId 46630)
+  AND add https://rpc.testnet.chain.robinhood.com to vercel.json CSP
+  `connect-src` (currently mainnet-only → testnet wallet calls would be blocked).
+- Context files still blank templates in Claude Project mirror — re-upload via
+  Project settings so next session loads them.
