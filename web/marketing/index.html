@@ -8,9 +8,9 @@
 <meta http-equiv="Expires" content="0">
 <title>$BUFFCAT — The Unofficial Mascot of Robinhood</title>
 <meta name="description" content="$BUFFCAT — the unofficial mascot of the Robinhood app, built as tough as the chain itself">
-<link rel="icon" type="image/png" href="assets/buffcircle.png">
-<script src="theme.js"></script>
-<link rel="stylesheet" href="buffcat-robinhood.css?v=20260715o">
+<link rel="icon" type="image/png" href="/assets/buffcircle.png">
+<script src="/web/shared/theme.js"></script>
+<link rel="stylesheet" href="/web/shared/buffcat-robinhood.css?v=20260715o">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -105,7 +105,7 @@
     <a href="#chart">Chart</a>
     <a href="#buy">How to Buy</a>
     <a href="#community">Community</a>
-    <a href="mining.html">Mining</a>
+    <a href="/mining">Mining</a>
     <button class="nav-cta connect-nav-btn" data-connect-wallet type="button">Connect</button>
     <button class="nav-cta" data-swap>Buy $BUFFCAT</button>
     <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">🌙</button>
@@ -117,7 +117,7 @@
   <!-- ============ HERO ============ -->
   <section id="hero">
     <div class="hero-image-wrap">
-      <img class="hero-image" src="assets/buff3d.png" alt="Buff Cat, the unofficial mascot of Robinhood" />
+      <img class="hero-image" src="/assets/buff3d.png" alt="Buff Cat, the unofficial mascot of Robinhood" />
     </div>
     <div class="hero-tag"><span class="live-dot"></span> LIVE ON ROBINHOOD CHAIN</div>
     <h1>
@@ -188,7 +188,7 @@
             <circle cx="200" cy="200" r="165" fill="url(#gCoin)"/>
             <circle cx="200" cy="200" r="165" fill="none" stroke="#03400f" stroke-width="6"/>
             <circle cx="200" cy="200" r="146" fill="none" stroke="#03400f" stroke-width="2" stroke-dasharray="4 8"/>
-            <image href="assets/buffcircle.png" x="35" y="35" width="330" height="330" preserveAspectRatio="xMidYMid slice" clip-path="url(#mascotCircleClip)"/>
+            <image href="/assets/buffcircle.png" x="35" y="35" width="330" height="330" preserveAspectRatio="xMidYMid slice" clip-path="url(#mascotCircleClip)"/>
           </svg>
           <div class="art-caption">BUFF CAT · Robinhood Chain · Built Different</div>
         </div>
@@ -222,7 +222,7 @@
             <div class="wallet-line">Address: <span id="walletAddress">Not connected</span></div>
             <div class="wallet-line">Balance: <strong id="walletBalance">0.0000 $BUFFCAT</strong></div>
             <div class="wallet-line">Access: <strong id="walletRole">Public — anyone can mine</strong></div>
-            <a href="mining.html" class="btn btn-green wallet-mining-btn">Mining</a>
+            <a href="/mining" class="btn btn-green wallet-mining-btn">Mining</a>
             <div class="wallet-note" id="walletNote">Connect your wallet to see your $BUFFCAT balance and the equivalent USDT value.</div>
           </div>
         </div>
@@ -322,7 +322,7 @@
       <div class="testimonials-grid">
         <div class="testimonial-card reveal" data-tilt>
           <div class="testimonial-top">
-            <div class="testimonial-avatar"><img src="assets/chad.png" alt="Chad" /></div>
+            <div class="testimonial-avatar"><img src="/assets/chad.png" alt="Chad" /></div>
             <div>
               <div class="testimonial-name">Chad</div>
               <div class="testimonial-role">19 · parking lot strategist</div>
@@ -333,7 +333,7 @@
         </div>
         <div class="testimonial-card reveal" data-tilt>
           <div class="testimonial-top">
-            <div class="testimonial-avatar"><img src="assets/marcy.png" alt="Marcy" /></div>
+            <div class="testimonial-avatar"><img src="/assets/marcy.png" alt="Marcy" /></div>
             <div>
               <div class="testimonial-name">Marcy</div>
               <div class="testimonial-role">31 · full-time ape</div>
@@ -344,7 +344,7 @@
         </div>
         <div class="testimonial-card reveal" data-tilt>
           <div class="testimonial-top">
-            <div class="testimonial-avatar"><img src="assets/vlad.png" alt="Vlad" /></div>
+            <div class="testimonial-avatar"><img src="/assets/vlad.png" alt="Vlad" /></div>
             <div>
               <div class="testimonial-name">Vlad</div>
               <div class="testimonial-role">Imaginary group chat legend</div>
@@ -528,7 +528,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
-<script src="vendor/ethers-5.7.2.umd.min.js"></script>
-<script src="buffcat-robinhood.js?v=20260715p"></script>
+<script src="/vendor/ethers-5.7.2.umd.min.js"></script>
+<script src="/web/marketing/buffcat-robinhood.js?v=20260715p"></script>
 </body>
 </html>
