@@ -197,3 +197,73 @@ Design/decision session only. NO code written, NO tests, NO deploys this session
   testnet 46630 + set verified address + widen CSP connect-src.
 - Stock-Token OUT test: claim(0) after posId 0 clears MIN_HOLD.
 - Re-upload the six context files to Claude Project settings (blank in mirror).
+
+## Session — Repo/context audit (2026-07-18)
+Audit only. No contract code written, no tests run, no deploys. Findings below
+verified by reading `main` at commit a266a6fb via the GitHub API/raw content.
+
+### Verified
+- `context/progress-tracker.md` IS current on `main` (commit a266a6fb,
+  2026-07-18T04:06Z, "docs: capture tokenomics + burn vault design decisions").
+  The 2026-07-18 tokenomics/burn session was recorded and pushed correctly.
+- All eight `context/` docs exist and are populated on `main`, including
+  `architecture.md` (3865 B) and `code-standards.md` (2517 B).
+
+### Found broken — DUPLICATE CONTRACT (highest priority)
+- Two files named `BuffCatMiner.sol` exist and they are DIFFERENT contracts:
+  - `contracts/src/BuffCatMiner.sol` (20,141 B) — the real one. Contains
+    `_ownerAddr`, `UsdgDividendFunded`, `FeaturedFunded`, `BuyFeeUpdated`
+    (the Slither fixes from 6adfc82). Tested, deployed, Blockscout-verified.
+  - `contracts/contracts/BuffCatMiner.sol` (18,561 B) — LEGACY. None of those
+    markers. Different design: `Ownable2Step`, `Tier` enum, `notifyRewardAmount`,
+    2% buy fee split 1% LP / 1% eco, on-contract LP ETH reserve. NOT deployed.
+- This violates architecture.md's stated invariant that `contracts/src/` is the
+  single source of economic logic.
+- Aggravating factor: `contracts/hardhat.config.js` exists, and Hardhat's
+  default source dir is `contracts/contracts/` — so any Hardhat run builds the
+  WRONG contract. `contracts/foundry.toml` has `src = "src"`, so `forge` is
+  correct. Also present and legacy: `contracts/scripts/deploy.js`,
+  `contracts/scripts/simulate.js`, `contracts/test/BuffCatMiner.test.js`,
+  `contracts/contracts/mocks/*.sol`.
+- ACTION REQUIRED (decision): delete the legacy Hardhat set, or move it to
+  `legacy/` with a README. Until resolved, it is a live footgun for any human
+  or agent that greps for "BuffCatMiner.sol".
+
+### Found broken — stale context docs (corrected versions drafted)
+- `architecture.md` "System Boundaries" and `code-standards.md`
+  "File organization" both still describe the PRE-restructure layout (frontend
+  files at repo root). Actual layout since commit 0b83989 is
+  `web/{marketing,miner,shared}`. `architecture.md` also mis-files `cat-drag.js`
+  under marketing; it is miner-only.
+- `code-standards.md` says `context/` holds "six context docs"; there are eight.
+
+### Found broken — competing progress docs
+- Root `PROGRESS.md` says "Last updated 2026-07-16, commit 2099c14, Status:
+  Contract built + tested. **Not deployed.**" — contradicts reality (deployed
+  + verified on testnet). Root `NEXT_SESSION.md` likewise duplicates
+  `context/next-session.md`. Delete or reduce to pointers.
+
+### Claude Project mirror (not a repo problem)
+- Re-uploading a context file ADDS a copy; it does not replace the old one.
+  Blank `[bracketed]` templates of `project-overview.md` and `ui-context.md`
+  are still in the project knowledge index alongside the populated versions,
+  and both are returned by search. They must be deleted by hand in Project
+  settings. `architecture.md` and `code-standards.md` were never uploaded at
+  all — upload them.
+
+### Open Questions added
+- Delete vs. quarantine the legacy Hardhat/contract set? (Deleting is cleaner;
+  quarantining preserves history. Either way it must stop being reachable by a
+  default `npx hardhat` invocation.)
+- Should root `PROGRESS.md` / `NEXT_SESSION.md` be deleted outright, given
+  `MINING_GUIDE.md` (public-facing) also lives at root?
+
+### Resolved this session
+- Legacy Hardhat set QUARANTINED to `legacy/` (commit 5f05020): the superseded
+  BuffCatMiner.sol, contracts/mocks/, both hardhat.config files, scripts/, and
+  BuffCatMiner.test.js. All 11 recorded by git as 100% renames (no content
+  change) + legacy/README.md. Gate: `forge build && forge test` after the move
+  = 20/20 passed, 0 failed, 3 invariants at 128,000 calls each, 0 reverts.
+  Foundry path unaffected (`contracts/foundry.toml` src = "src").
+- Open question "delete vs quarantine" → answered: quarantine (history kept,
+  no longer reachable by a default `npx hardhat` run).
