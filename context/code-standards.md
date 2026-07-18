@@ -25,7 +25,7 @@
 - Public state vars `TIER_DURATION` / `TIER_MULT_BPS` are UPPER_CASE by
   intent — renaming changes the ABI and breaks the frontend. Do not rename.
 - **Always reference the contract by full path: `contracts/src/BuffCatMiner.sol`.**
-  A legacy same-named file exists at `contracts/contracts/BuffCatMiner.sol`
+  A legacy same-named file exists at `legacy/contracts/BuffCatMiner.sol`
   with different fee math (see architecture.md → Quarantine). Never edit,
   compile, or cite it.
 
@@ -57,7 +57,7 @@
 
 - Contract: `forge test` (must stay 20/20 incl. the 128k-call invariants),
   then `slither .` for static analysis.
-- **Foundry only.** `contracts/hardhat.config.js` and `contracts/scripts/` are
+- **Foundry only.** `legacy/hardhat.config.js` and `legacy/scripts/` are
   legacy and compile the quarantined contract. Do not run Hardhat.
 - No `npm run build` — this is not a Node/TS project. "Build passes" means
   `forge build` compiles and tests pass.

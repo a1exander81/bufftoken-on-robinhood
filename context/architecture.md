@@ -38,21 +38,22 @@
 
 ### Quarantine / non-authoritative (does NOT define behavior)
 
-- `contracts/contracts/BuffCatMiner.sol` — a DIFFERENT, legacy contract
-  (2% buy fee 1% LP / 1% eco, `Ownable2Step`, `Tier` enum,
-  `notifyRewardAmount`, on-contract LP ETH reserve). It is NOT deployed, NOT
-  the tested contract, and its economics contradict the live design. It exists
-  only as history.
-- `contracts/hardhat.config.js`, `contracts/scripts/`,
-  `contracts/test/BuffCatMiner.test.js`, `contracts/contracts/mocks/` — the
-  legacy Hardhat project that compiles the file above. Hardhat's default source
-  dir is `contracts/contracts/`, so running Hardhat here builds the WRONG
-  contract. Do not use it. Foundry is the only build/test path.
+Moved to `legacy/` in commit 5f05020. Retained for history only.
 
-> Pending decision (see progress-tracker.md): delete this quarantine set, or
-> move it to `legacy/` with a README. Until then, treat any reference to
-> "BuffCatMiner.sol" without a full path as ambiguous and resolve it to
-> `contracts/src/`.
+- `legacy/contracts/BuffCatMiner.sol` — a DIFFERENT, superseded contract
+  (2% buy fee 1% LP / 1% eco, `Ownable2Step`, `Tier` enum,
+  `notifyRewardAmount`, on-contract LP ETH reserve). NOT deployed, NOT tested,
+  NOT audited. Its economics contradict the live design.
+- `legacy/hardhat.config.js`, `legacy/hardhat.config.offline.js`,
+  `legacy/scripts/`, `legacy/BuffCatMiner.test.js`, `legacy/contracts/mocks/`
+  — the Hardhat project that compiled the file above. It previously sat at
+  `contracts/contracts/`, where Hardhat's default source dir meant a bare
+  `npx hardhat` built the WRONG contract. Moving it out removed that path.
+  Foundry is the only build/test path.
+
+> Resolved: quarantine (not delete) — history kept, no longer reachable by a
+> default Hardhat invocation. Gate after the move: `forge test` 20/20, 3
+> invariants at 128,000 calls, 0 reverts.
 
 ## Storage Model
 
