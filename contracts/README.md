@@ -1,71 +1,101 @@
-# BuffCatMiner — Contracts (v2: oracle removed, flat fee)
+# BuffCatMiner — Contracts
 
-Lock BUFFCAT, earn ETH/USDG/featured dividends. Principal always returned in full.
-Fee is a FLAT ETH amount (owner-adjustable, hard-capped) — no oracle, no in-contract
-swap. Validated against a live reference contract on Robinhood Chain
-(0x56910D4409F3a0C78C64DD8D0545FF0705389870) that uses the same fee->distribute
-pattern for its NVDA dividend.
+Lock BUFFCAT, earn ETH/USDG/featured dividends. Principal is always returned in
+full. The fee is a FLAT ETH amount (owner-adjustable, hard-capped) — no oracle,
+no in-contract swap.
+
+**Authoritative context lives in `context/`** (see `CLAUDE.md` for read order).
+This README covers the contracts directory only; where it disagrees with
+`context/progress-tracker.md`, the tracker wins.
 
 ## Files
-- `src/BuffCatMiner.sol` — main contract (~440 lines)
-- `src/PriceGuard.sol.unused` — Chainlink oracle reader, NOT currently used.
-  Kept in case a future version wants dollar-pegged fees. Rename to .sol and
-  re-integrate if needed (see chat history for the wiring).
-- `test/` — 20 tests: core, attacks, hostile-token, featured, compound, invariants
 
-## Setup on your Mac
+- `src/BuffCatMiner.sol` — the contract. The ONLY definition of economic logic.
+- `test/` — 20 Foundry tests: core, attacks, hostile-token, featured, compound,
+  invariants.
+- `script/DeployTestnet.s.sol` — testnet deploy script.
+- `foundry.toml` — `src = "src"`.
+
+> A superseded contract of the same name lives in `legacy/contracts/`. It is NOT
+> deployed and its fee math differs. Never compile or cite it. See
+> `context/architecture.md` → Quarantine.
+
+## Build and test
+
+Foundry only. There is no Hardhat path and no `npm run build`.
+
 ```bash
-cd ~/Desktop/bufftoken-on-robinhood
-git checkout main && git pull && git checkout -b feature/buffcat-miner
-mkdir -p contracts && cd contracts
-forge init . --force --no-git
-forge install OpenZeppelin/openzeppelin-contracts --no-git
-forge install foundry-rs/forge-std --no-git
-printf '@openzeppelin/=lib/openzeppelin-contracts/\nforge-std/=lib/forge-std/src/\n' > remappings.txt
-# copy the src/BuffCatMiner.sol and test/*.sol files from this folder in
-forge test          # should show 20 passing
+cd contracts
+forge build
+forge test                                          # expect 20 passing
 forge test --match-path test/Invariant.t.sol -vvv   # 128k-call solvency fuzz
 ```
 
-## Then — Slither (runs cleanly on your Mac, not in a sandbox)
+Static analysis (run on a real machine, not a sandbox):
+
 ```bash
 pip3 install slither-analyzer
-slither src/BuffCatMiner.sol
+slither .
 ```
 
-## Model (confirmed, simplified)
-- Lock BUFFCAT (returned 100% at unlock)
-- FLAT ETH platform fee (buyFeeWei, default 0.003 ETH ~ $5).
-  Owner can adjust within hard bounds: 0.0005–0.05 ETH. No oracle.
-- Split: 25 buyback / 40 dividends / 15 platform / 20 eco
+> Do NOT run `forge init` here. The project is already initialized; `--force`
+> would overwrite it.
+
+## Model
+
+- Lock BUFFCAT — returned 100% at unlock.
+- FLAT ETH platform fee (`buyFeeWei`, default 0.003 ETH). Owner-adjustable
+  within hard bounds 0.0005–0.05 ETH. No oracle, by design.
+- Fee split: 25 buyback / 40 dividends / 15 platform / 20 eco.
 - Tiers: Tourist 1d 1.0x / GymTrial 3d 1.25x / Member 7d 1.6x / Beast 30d 2.2x /
-  DiamondPaws 1y 3.5x / Chad 10y 5.0x / Ascended 100y 6.0x
-- Dividends: ETH / USDG / featured (BUFF'mania) — investor picks
-- Featured (e.g. NVDA): owner manually buys NVDA with buyback ETH, calls
-  fundFeatured() to deposit it. 1.3x bonus, snapshot-gated (front-run proof).
-  Validated: NVDA is contract-transferable (see reference contract).
-- Compound: 2% fee, preserves pending, mining-power credit
-- Early exit: 10% penalty -> 70% stayers / 15% platform / 15% buyback
-- Min-hold 24h before dividends accrue
-- MAX_LOCK cap: 30M tokens per position (TVL control)
+  DiamondPaws 1y 3.5x / Chad 10y 5.0x / Ascended 100y 6.0x.
+- Dividends: ETH / USDG / featured — the investor picks via `choice`.
+- Featured: owner funds the pot with `fundFeatured()`. 1.3x bonus,
+  snapshot-gated (front-run resistant).
+- Compound: 2% fee, preserves pending, credits hashpower.
+- Early exit: 10% penalty → 70% stayers / 15% platform / 15% buyback.
+- MIN_HOLD 24h before dividends accrue.
+- MAX_LOCK: 30M tokens per position.
 
-## Validated token addresses (Robinhood Chain)
-- WETH: 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73
-- USDG: 0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168 (Global Dollar, Paxos)
-- NVDA: 0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC (NVIDIA Tokenized Stock)
-  Note: ERC-8056 scaled-UI token, uiMultiplier() currently 1.0 for all live
-  stock tokens. Balance-delta accounting in the miner handles this correctly.
+## Token addresses (Robinhood Chain)
 
-## Wallets (immutable at deploy)
-- Deployer/Owner: 0xc2413696576176d1e31D55a2DEdA609906a15596
-- Buyback:  0xEBFB19E12810039Fba51fABe9D45Fdd8A8342707
-- Platform: 0x640e846504b8b179885E36fF9FcC353Bf08F4b1F
-- Eco:      0x13864051772FDFBce895d21a483eee02edaeB445
-- Dividends: stay in-contract
+- WETH: `0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73`
+- USDG: `0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168` (Global Dollar, Paxos)
+- BUFFCAT (mainnet, immutable): `0xD80aFe3Be875a14155FDd96D39669A6734E12036`
+- NVDA (mainnet): `0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC`
+- RH-NVDA (testnet): `0xA916e8830d57cC9846E37859D90c24c5531e71c7` — exists but
+  is NOT faucet-obtainable or openly mintable.
+- RH-TSLA (testnet): `0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E` — used as the
+  Stock-Token stand-in for testing.
 
-## STILL TODO before mainnet
-- Run Slither on Mac
-- Deploy to TESTNET first, verify on Blockscout
-- Test NVDA fund/distribute end-to-end on testnet (confirm no transfer gates)
-- Human audit (Claude review != audit)
-- Never rush a contract holding user funds
+Stock Tokens are ERC-8056 scaled-UI tokens; `uiMultiplier()` is currently 1.0
+for all live ones. The miner's balance-delta accounting handles this correctly.
+
+## Deployment status
+
+Testnet (Robinhood Chain 46630), block 90901040 — deployed and Blockscout-verified:
+
+- BuffCatMiner: `0xEcd9e1E717D6628513E1E555702ED21a222872A5`
+- MockBuffcat:  `0xaBf15C76b8BB5493fb51DC5b8a625574486C5F67`
+- Owner/deployer: a THROWAWAY key, `0x897D60882FE0d15cD81b6631462891Af38b3ef37`,
+  held in an encrypted cast keystore. Reference it with `--account throwaway`,
+  never `--private-key`.
+
+**Mainnet: not deployed.** Blocked until Step 5 (testnet click-through) and
+Step 6 (independent human audit) are both complete.
+
+## Key handling
+
+- Fee wallets are immutable constructor args — fixed at deploy, never
+  owner-settable.
+- The mainnet owner MUST be a hardware wallet or multisig. The owner can reroute
+  weekly featured rewards, so a hot EOA is an unacceptable risk. The specific
+  mainnet owner address is an OPEN DECISION — see `context/progress-tracker.md`.
+- Never place a real owner key in a deploy env, a script, or a chat.
+
+## Remaining before mainnet
+
+See `context/progress-tracker.md` for the live list. At time of writing:
+finish the testnet click-through (claim / compound / unlock / early-exit /
+pause / setBuyFee), prove a Stock Token moves OUT via `claim`, then an
+independent human audit. AI review is not an audit.
