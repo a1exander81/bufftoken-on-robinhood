@@ -257,3 +257,13 @@ verified by reading `main` at commit a266a6fb via the GitHub API/raw content.
   default `npx hardhat` invocation.)
 - Should root `PROGRESS.md` / `NEXT_SESSION.md` be deleted outright, given
   `MINING_GUIDE.md` (public-facing) also lives at root?
+
+### Resolved this session
+- Legacy Hardhat set QUARANTINED to `legacy/` (commit 5f05020): the superseded
+  BuffCatMiner.sol, contracts/mocks/, both hardhat.config files, scripts/, and
+  BuffCatMiner.test.js. All 11 recorded by git as 100% renames (no content
+  change) + legacy/README.md. Gate: `forge build && forge test` after the move
+  = 20/20 passed, 0 failed, 3 invariants at 128,000 calls each, 0 reverts.
+  Foundry path unaffected (`contracts/foundry.toml` src = "src").
+- Open question "delete vs quarantine" → answered: quarantine (history kept,
+  no longer reachable by a default `npx hardhat` run).
