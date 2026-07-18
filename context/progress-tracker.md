@@ -267,3 +267,16 @@ verified by reading `main` at commit a266a6fb via the GitHub API/raw content.
   Foundry path unaffected (`contracts/foundry.toml` src = "src").
 - Open question "delete vs quarantine" → answered: quarantine (history kept,
   no longer reachable by a default `npx hardhat` run).
+
+### Stale-doc cleanup (2026-07-18, PR docs/retire-stale-docs)
+- `contracts/README.md` listed the EXPOSED+ROTATED key address
+  `0xc2413696576176d1e31D55a2DEdA609906a15596` as "Deployer/Owner". Removed.
+  README now documents the throwaway `0x897D...ef37` and states the mainnet
+  owner is an open decision (hardware wallet / multisig required).
+- Same README also documented `src/PriceGuard.sol.unused` (file does not exist
+  on main), pointed at "chat history" for wiring, and instructed
+  `forge init . --force` inside an initialized project. All removed.
+- Root `PROGRESS.md` / `NEXT_SESSION.md` reduced to pointers at `context/`.
+- Orphaned `package.json` / `package-lock.json` (hardhat, hardhat-toolbox,
+  solc devDeps) moved to `legacy/`. Gate: forge test 20/20, 0 failed,
+  3 invariants at 128,000 calls, 0 reverts.
