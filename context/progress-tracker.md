@@ -150,3 +150,50 @@ of truth; record only what is actually verified (cite tx hashes / test runs).
 - Note: verified without manually pasting constructor args (Blockscout matched
   from the deployment tx / accepted as match). If a "full match" upgrade is ever
   wanted, re-verify with the ABI-encoded args appended.
+
+## Session — Tokenomics & burn design decisions (2026-07-18)
+Design/decision session only. NO code written, NO tests, NO deploys this session.
+
+### Decided
+- Fee/dividend model: KEEP existing BuffCatMiner (Synthetix-style fee-funded
+  accumulator paying ETH/USDG/featured via Choice enum). It already meets the
+  core goal. MasterChef (net2dev) model REJECTED — it mints an inflationary
+  reward token (needs its own LP, dilutive), wrong for real-asset dividends.
+- "$5 fee" clarified: no oracle wanted; fee stays ETH-denominated (flat, or a
+  %). A hard USD peg would need a price feed — declined.
+- Deflation: add a BURN. Manual/mechanized via a dedicated BURN VAULT contract
+  (holds fee BUFFCAT, burn-only). Owner/keeper triggers; auto-burn kept keyless
+  and rule-bound so no privileged hot key on any server.
+- Burn params (from simulation): 0.25% of circulating per burn CAP + a WEEKLY
+  frequency cap (threshold-primary, ~7-day fallback). Sim finding: per-burn %
+  ALONE is unsafe — without a frequency cap it burns 68–100%/yr; weekly cap
+  → ~12%/yr, volume-independent. Keep burns SMALL until liquidity deepens.
+- Fairness of burns: NOT a schedule problem, a LIQUIDITY problem. On the ~$15K
+  pool a $1k buy moves price ~34% (front-runnable); at ~$1M depth it's ~0.5%.
+  Policy: full transparency + loud POST-burn comms, no precise PRE-burn timing.
+- Owner ops: build a web ADMIN PANEL (owner wallet connects + signs; UI gated on
+  reading owner() == connected wallet). Telegram bot DEFERRED (notify + one-tap
+  sign later; never a full owner key on a server).
+
+### Key facts established
+- BUFFCAT token: MAINNET, immutable, at 0xD80...2036. Cannot add tax to it.
+- BUFFCAT/WETH pool: ~$15.3K total (279.4M BUFFCAT + 3.53 WETH), price
+  ~$0.0000318. Thin — the common blocker behind fairness, price stability, and
+  any %-of-value fee ambition. Growing WETH-side liquidity is the real milestone.
+- Robinhood Chain runs Uniswap v2/v3/v4 + hooks (chain id 4663 = 0x1237).
+  A trade-tax would require a v4 hook + NEW hooked pool + liquidity migration —
+  parked; not pursued now.
+
+### NEXT (agreed order)
+1. Write BURN VAULT contract (burn-only; 0.25% cap; weekly; threshold+fallback;
+   Burned(amount,newSupply,timestamp) event for comms). Run full ritual:
+   tests -> Slither -> testnet deploy -> Blockscout verify.
+2. Web admin panel on top of deployed functions (miner setBuyFee/setFeatured/
+   fund*/pause + vault burn).
+3. Telegram console (notify + one-tap) — later.
+
+### Still open from prior sessions (unchanged)
+- Frontend still points at mainnet (0x1237), MINER_ADDRESS="" — repoint to
+  testnet 46630 + set verified address + widen CSP connect-src.
+- Stock-Token OUT test: claim(0) after posId 0 clears MIN_HOLD.
+- Re-upload the six context files to Claude Project settings (blank in mirror).
