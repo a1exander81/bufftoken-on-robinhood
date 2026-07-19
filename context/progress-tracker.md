@@ -281,3 +281,82 @@ verified by reading `main` at commit a266a6fb via the GitHub API/raw content.
   solc devDeps) moved to `legacy/`. Gate: forge test 20/20, 0 failed,
   3 invariants at 128,000 calls, 0 reverts.
 
+
+## Session — Burn vault research + volume telemetry (2026-07-18)
+Research/telemetry session. No contract written, no ritual step advanced.
+All figures below read from mainnet (chain 4663) via `cast` or the bot.
+
+### VERIFIED ON-CHAIN
+- **BUFFCAT has NO burn function.** Source at `0xD80a...2036` is a launchpad
+  `LaunchToken` inheriting plain OZ `ERC20` — not `ERC20Burnable`. No `burn`,
+  no `burnFrom`, no exposed `_burn`. Supply minted once in the constructor;
+  `totalSupply()` can never decrease.
+  => Burns MUST go to `0x000000000000000000000000000000000000dEaD`.
+  => `Burned` events must report CIRCULATING (total - dEaD), never
+     `totalSupply()`, which sits frozen at 1B forever.
+  This closes the Option A / Option B question. It is Option B.
+- **Total supply = 1,000,000,000 BUFFCAT** (`totalSupply()`). Confirms the
+  figure every prior simulation assumed.
+- **108,092,328 BUFFCAT (10.8092%) is ALREADY at `0x...dEaD`** — a pre-existing
+  burn, not zero as assumed. Circulating = 891,907,672. Via `balanceOf`.
+- **Pool is Uniswap V3**, `0xde543192e1939Ee2538db77CCc225Aa67412bEa6`,
+  resolved via `LaunchToken.liquidityPool()`. Fee tier **10000 (1%)**, NOT the
+  0.3% earlier estimates assumed. `token0 = WETH`, so feeGrowthGlobal0 = BUYS
+  and feeGrowthGlobal1 = SELLS (V3 charges the fee on the INPUT token).
+- **A contract CAN read swap volume on-chain, via fee-growth deltas.** Volume
+  is not stored by any pool and contracts cannot read event logs, but V3
+  exposes monotonic fee accumulators in storage:
+      volume = (deltaFeeGrowth * liquidity / 2^128) * 1e6 / fee
+  PROVEN: two consecutive reads with liquidity unchanged recovered a buy of
+  exactly 0.03000000 WETH (fee 0.0003 = 1%). Exact, not approximate. No oracle,
+  no keeper, no hook, no change to BUFFCAT.
+  CAVEAT: accurate only while in-range liquidity is stable across the interval.
+  A lifetime computation (current L vs 16 days of growth) is unreliable.
+
+### MEASURED (2026-07-18, ~67 min of sampled 5-min windows)
+- raw ~$4,880 / 67 min -> ~$105,000/day (56.8 WETH/day)
+- split 61.9% buys / 38.1% sells
+- 70/30 buy-weighted = 54.8% of raw = **31.1 WETH/day weighted**
+- Price moved $0.00006145 -> $0.00007693 (+25%) during the sample, so this is
+  likely an ACTIVE-day upper bound. PROVISIONAL pending 24-48h.
+
+### DESIGN DECISIONS (supersede earlier assumptions)
+- **Burn everything in the vault**, weekly, above a dust floor. The earlier
+  0.25%-of-supply cap was designed against a TAX-funded model that does not
+  apply: every token in the vault is BOUGHT at market with real ETH, so a
+  buyback-and-burn cannot over-burn. Keep a ~2%/burn emergency ceiling as a
+  circuit breaker only.
+- **Trigger = weighted volume primary, time fallback:**
+      canBurn = vaultBalance >= DUST_FLOOR
+                && (weightedVolume >= VOLUME_THRESHOLD
+                    || now >= lastBurnAt + FALLBACK_INTERVAL)
+- **Weighting 70% buys / 30% sells.** Sells are BUFFCAT-denominated, converted
+  to WETH via the pool's own `sqrtPriceX96` (no oracle). Weights and threshold
+  owner-settable within bounds.
+- **VOLUME_THRESHOLD ~ 220 WETH weighted** => ~weekly at measured activity;
+  14d if volume halves (fallback covers it), 3.5d if it doubles.
+  PROVISIONAL — derived from 67 minutes. Re-derive from 24-48h.
+- Threshold in WETH, never USD — preserves the no-oracle rule.
+- KNOWN/ACCEPTED: `sqrtPriceX96` is spot and flash-loan manipulable in-block.
+  Worst case triggers a burn slightly early on whatever the vault holds. No
+  value at risk; not worth engineering around.
+
+### BUILT (telemetry only — no funds at risk, not part of the ritual)
+- Read-only Telegram bot on VPS (systemd `buffcat-volume`, user `buffbot`, no
+  wallet/private key). `/vol`, `/burn`, `/tg`. Hourly burn card.
+- Committed to `bots/volume/`. `.env` gitignored; `.env.example` tracked.
+
+### OPEN QUESTIONS — MUST be resolved before Step 1 (Design)
+1. **Vault funding path.** The 25% buyback share is ETH and goes to the
+   immutable `buybackWallet`. Manual forward to the vault, or redeploy
+   BuffCatMiner to point at it? (Redeploy = new contract, fresh forge test +
+   Slither + testnet + verify.)
+2. **Who executes the ETH -> BUFFCAT swap?** Off-chain by prior decision (no
+   router calls in-contract, MEV). Manual, or a keyed keeper? A keeper needs a
+   hot key, which prior sessions ruled out.
+3. **Definition of circulating.** Currently total - dEaD. Also exclude LP,
+   team, treasury? Must be consistent across contract, bot, and comms.
+4. **Route the BUFFCAT-denominated fees (2% compound, 15% early-exit) to the
+   vault?** They are price-INVARIANT and would give a deflation floor that does
+   not erode as price rises. Same redeploy question as (1).
+5. **Final VOLUME_THRESHOLD** — pending 24-48h of measured volume.
