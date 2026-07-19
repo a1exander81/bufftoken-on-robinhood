@@ -280,3 +280,4 @@ verified by reading `main` at commit a266a6fb via the GitHub API/raw content.
 - Orphaned `package.json` / `package-lock.json` (hardhat, hardhat-toolbox,
   solc devDeps) moved to `legacy/`. Gate: forge test 20/20, 0 failed,
   3 invariants at 128,000 calls, 0 reverts.
+
