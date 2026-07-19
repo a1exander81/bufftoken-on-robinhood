@@ -38,3 +38,8 @@ contracts/typechain-types/
 mining.html.bak
 assets/orig/
 *.bak.*
+
+# bot runtime state
+bots/volume/*state*.json
+bots/volume/burn-target.json
+bots/volume/node_modules/
