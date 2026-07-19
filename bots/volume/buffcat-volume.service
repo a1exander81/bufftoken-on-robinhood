@@ -1,0 +1,22 @@
+[Unit]
+Description=BuffCat volume bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=buffbot
+WorkingDirectory=/home/buffbot/volume
+EnvironmentFile=/home/buffbot/volume/.env
+ExecStart=/usr/bin/node /home/buffbot/volume/volume-bot.js
+Restart=always
+RestartSec=30
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=false
+ReadWritePaths=/home/buffbot/volume
+
+[Install]
+WantedBy=multi-user.target
