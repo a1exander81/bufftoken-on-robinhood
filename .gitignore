@@ -43,3 +43,7 @@ assets/orig/
 bots/volume/*state*.json
 bots/volume/burn-target.json
 bots/volume/node_modules/
+
+# but keep templates
+!*.env.example
+!**/.env.example
