@@ -360,3 +360,14 @@ All figures below read from mainnet (chain 4663) via `cast` or the bot.
    vault?** They are price-INVARIANT and would give a deflation floor that does
    not erode as price rises. Same redeploy question as (1).
 5. **Final VOLUME_THRESHOLD** — pending 24-48h of measured volume.
+
+### Verified V3 stack (2026-07-19, chain 4663)
+- Factory:          0x1f7d7550B1b028f7571E69A784071F0205FD2EfA
+- PositionManager:  0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3 (~24.4KB, factory()
+                    and WETH9() both check out — standard NFPM)
+- Pool (1% tier):   0xde543192e1939Ee2538db77CCc225Aa67412bEa6
+- token0 = WETH 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73
+- token1 = BUFFCAT 0xD80aFe3Be875a14155FDd96D39669A6734E12036
+- NOT canonical Uniswap — fork deployment. Uniswap doc addresses are WRONG here.
+- Swap router: still unidentified. Find via Blockscout (caller of pool.swap), or
+  skip it by calling pool.swap() directly with a callback.
