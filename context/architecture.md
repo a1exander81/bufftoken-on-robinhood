@@ -22,6 +22,34 @@
 - `contracts/script/DeployTestnet.s.sol` — Foundry deploy script.
 - `contracts/foundry.toml` — `src = "src"`, so `forge` builds the correct file.
 
+- `contracts/src/BuffCatTreasury.sol` — the treasury vault (Track B). Receives
+  ETH and BUFFCAT, buys BUFFCAT, holds a full-range V3 position, collects LP
+  fees, funds miner dividends, and burns (PURRGE / HYPURR). Every value-moving
+  destination is an immutable constructor-set address. It does NOT re-implement
+  dividend math — it calls the miner's existing `fundEthDividends()`.
+  Design: `context/treasury-design.md`.
+
+  External contracts it touches (the COMPLETE set):
+
+  | Role | Address |
+  | ---- | ------- |
+  | pool | `0xde543192e1939Ee2538db77CCc225Aa67412bEa6` — swap, observe, reads |
+  | router | `0x8876789976decbfcbbbe364623c63652db8c0904` — UniversalRouter, Blockscout-verified, immutable (proxy slot zero), 24,546 B |
+  | permit2 | `0x000000000022D473030F116dDEE9F6B43aC78BA3` — canonical; runtime differs from Ethereum in 39 bytes (immutables only) |
+  | WETH9 | `0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73` — deposit / withdraw |
+  | NFPM | `0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3` — LP position |
+  | miner | deployed `BuffCatMiner` — `fundEthDividends` |
+  | DEAD | `0x000000000000000000000000000000000000dEaD` — burn |
+
+  > **HAZARD: router look-alikes exist on this chain.**
+  > `0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc` is an upgradeable
+  > TransparentUpgradeableProxy (752 B) that trades against this pool and is
+  > NOT a router. Never resolve the router by sampling a recent swap.
+
+  Approvals to the router are EXACT-AMOUNT and SHORT-EXPIRY via Permit2.
+  Never a max approval.
+
+
 ### Frontend (post-`web/` restructure, commit 0b83989)
 
 - `web/miner/mining.html` / `mining.js` / `mining.css` — the miner app.
@@ -95,3 +123,28 @@ Moved to `legacy/` in commit 5f05020. Retained for history only.
    same name exists anywhere in the tree, it is quarantined and labelled as
    such here, or it is deleted. A same-named contract with different fee math
    is a live hazard, not a harmless leftover.
+8. **Value leaves the treasury only to the addresses listed in System
+   Boundaries** — pool, router, Permit2, WETH9, position manager, the miner's
+   dividend function, or DEAD. All are immutable constructor-set addresses. No
+   EOA destination, no owner withdrawal, no arbitrary `call`, no
+   `delegatecall`, no upgrade path, no standing or unlimited ERC-20 approval to
+   any address. This is the invariant that matters most; asserted by inspection
+   AND by 128k-call invariant fuzz.
+9. **`circulating = totalSupply() - balanceOf(DEAD)`, with no other
+   exclusions.** Binding identically across contract, bot, website, and public
+   comms. Treasury-held BUFFCAT is disclosed separately via `treasuryHeld()`
+   and never netted out. `totalSupply()` is frozen at 1B and is never cited as
+   evidence of a burn.
+10. **`totalBurned` counts only burns performed BY this contract.** It is an
+    internal counter, never derived from `balanceOf(DEAD)`. A third-party
+    burner (`0x9eFdC1A8…EE0417`, funded by the launchpad's `LaunchLocker`) has
+    been burning BUFFCAT since ~1 day after launch and continues; the `dEaD`
+    balance moves for reasons outside this contract. Any hardcoded baseline is
+    a bug.
+11. **The treasury LP position is full-range**; tick bounds are immutable
+    constants. It is never rebalanced. Liquidity may be decreased only back
+    into the treasury, where invariant 8 still binds.
+12. **No swap executes without a valid on-chain price reference.** The pool's
+    TWAP is the only permitted source (no external oracle). The pool must carry
+    sufficient `observationCardinality` before deployment — see
+    `treasury-design.md` §11.

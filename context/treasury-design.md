@@ -24,6 +24,15 @@ A treasury that owns liquidity earns from **traders**, who trade whether or not
 anyone new locks. Route that income into the existing dividend accumulator and
 yield survives a dead recruitment pipeline.
 
+> **CORRECTION (2026-07-20).** The crossover model below assumed ~$271/week
+> reaching the treasury, which is ~100% of lock-fee revenue. The contract sends
+> the 25% buyback share, ~$69/week. The real timeline is ~3-4x longer than
+> stated. **Re-run this table before any external use.**
+>
+> Separately: the BURN half of this design is out-scaled by the launchpad's
+> existing automatic buyback-and-burn (§3). The DIVIDEND half is not — nothing
+> currently routes LP fees into `fundEthDividends`. That remains the purpose.
+
 ### Measured basis for the claim
 
 Simulated 2026-07-19 from on-chain figures (§3):
@@ -89,14 +98,17 @@ money. There is no attack in donating to a dividend pool.
 | --- | --- |
 | BUFFCAT | `0xD80aFe3Be875a14155FDd96D39669A6734E12036` |
 | Total supply | 1,000,000,000 (immutable, minted once) |
-| Already burnt at `0x…dEaD` | 108,092,328 (10.8092%) |
-| Circulating | 891,907,672 |
+| Burnt at `0x…dEaD` | **116,310,333 as of 2026-07-20 — a DATED READING, not a constant.** A third-party burner funded by the launchpad's `LaunchLocker` has run 34 burns since block 860,710 and continues (~6.1M/day). The 108,092,328 recorded 2026-07-18 was this same programme mid-flight, not a genesis burn. |
+| Circulating | 883,689,667 as of 2026-07-20 |
 | V3 factory | `0x1f7d7550B1b028f7571E69A784071F0205FD2EfA` |
 | Position manager | `0x73991a25C818Bf1f1128dEAaB1492D45638DE0D3` (~24.4KB, `factory()` and `WETH9()` both verified) |
 | Pool | `0xde543192e1939Ee2538db77CCc225Aa67412bEa6` |
 | Fee tier | 10000 (**1%**) |
 | token0 / token1 | WETH `0x0Bd7…AD73` / BUFFCAT `0xD80a…2036` |
-| Swap router | **UNKNOWN — blocking, see §10** |
+| Swap router | `0x8876789976decbfcbbbe364623c63652db8c0904` — UniversalRouter, Blockscout-verified, immutable (proxy slot zero), 24,546 B |
+| Permit2 | `0x000000000022D473030F116dDEE9F6B43aC78BA3` — canonical, 39 bytes differ from Ethereum (immutables only) |
+| `feeProtocol` | **0** — verified 2026-07-20; volume figures are not understated |
+| Pool size | 16.47 WETH + 77,488,559 BUFFCAT ≈ $56,600 (2026-07-20) |
 
 **NOT canonical Uniswap.** This is a fork deployment; addresses from Uniswap's
 docs are wrong for this chain.
@@ -135,8 +147,13 @@ computation is unreliable); out-of-range liquidity is undercounted; a nonzero
 **`BuffCatTreasury.sol`** — receives ETH and BUFFCAT, buys BUFFCAT, holds a
 full-range V3 position, collects LP fees, funds dividends, and burns.
 
-Every function permissionless. The contract enforces the rules; nobody holds a
-key that can take anything out, including the owner.
+Value-moving destinations are limited to the immutable set in
+`architecture.md` → System Boundaries: the pool, the router, Permit2, WETH9,
+the position manager, the miner's dividend function, and DEAD. No EOA
+destination exists anywhere in the code.
+
+PURRGE and HYPURR are owner-gated (timing only, never destination); funding and
+fee collection stay permissionless. See §5a.
 
 ```
 receive ETH        (25% buyback share, sent by the miner as today)
@@ -191,6 +208,9 @@ bits and overflows uint256, as does `deltaFeeGrowth * liquidity`.
 | `MAX_SWAP_BPS` | **50** (0.5% of reserves) | Per-call size cap |
 | `MIN_SWAP_INTERVAL` | **1 hour** | Between swaps |
 | `EMERGENCY_CAP_BPS` | **200** (2% of circulating) | Circuit breaker only; must never fire normally |
+| `HYPURR_SWAP_BPS` | **300** (3% of reserves) | 6x PURRGE, visibly the big one; past ~5% slippage outweighs tokens gained |
+| `HYPURR_VAULT_BPS` | **5000** (50% of vault) | Second cap, so one HYPURR cannot drain the vault |
+| `HYPURR_INTERVAL` | **7 days** | Bounds a compromised key, not the owner |
 
 Measured basis (10h, 82 windows, 2026-07-18/19): buys $10,249.85 (49.9%),
 sells $10,300.37 (50.1%), raw $20,550.22, weighted $10,265.01 = 50.0% of raw
@@ -200,9 +220,16 @@ Note: at a 50/50 flow split the 70/30 weighting yields exactly 50% of raw — it
 does nothing. It only bites when flow is directionally skewed, which is when
 you want it to.
 
-An earlier 67-minute sample gave 31.1 WETH/day and a 220 WETH threshold. It
-caught a +25% price run and was unrepresentative. **Re-derive from a full week
-before mainnet.** 10h is enough to design against, not to launch against.
+**`VOLUME_THRESHOLD` confirmed at 100e18 (2026-07-20), across four windows:**
+13.3 / 27.7 / 31.1 / 43.2 weighted WETH/day — a 3.3x spread with no stable
+baseline. 100 WETH fills in 2.3 days at the current rate, 3.6 days at 27.7, and
+~7.5 days at the quietest observed — degrading into the 7-day fallback rather
+than going dead. Nothing else in that range does both.
+
+Reasoning reversed mid-session: an earlier note to err high (200) assumed the
+threshold was the trigger. With PURRGE owner-gated, any threshold above ~7 days
+of volume never fires, because the fallback opens the gate first. Re-derive
+after a quiet week.
 
 Owner may retune `LP_BPS`/`BURN_BPS`, `VOLUME_THRESHOLD`, `FALLBACK_INTERVAL`,
 `BUY_BPS`/`SELL_BPS`, `DUST_FLOOR` within hard bounds. `EMERGENCY_CAP_BPS`,
@@ -307,29 +334,69 @@ deflation floor that does not erode as price rises.
 
 ## 10. Open questions
 
-1. **Swap router address — BLOCKING.** Not discoverable from the pool or the
-   position manager. Find via Blockscout (the caller of `pool.swap()` on any
-   recent trade). Alternative: call `pool.swap()` directly with a callback,
-   removing the dependency and giving exact slippage control. Decide before
-   Step 2.
-2. **Does `circulating` also exclude LP / team / treasury holdings?** Currently
-   total - dEaD only. Note the treasury will itself hold BUFFCAT, which makes
-   this sharper than before. Must match across contract, bot, and comms;
-   changing it after publishing burn figures is expensive.
-3. **Mainnet owner** — hardware wallet or multisig. Still undecided, now
-   gating a contract that holds real value.
-4. **Re-derive `VOLUME_THRESHOLD`** from a full week of bot data.
-5. **Impermanent loss is not modelled.** All treasury projections track dollars
-   deployed, not position value after price movement. At 10x, IL is 42.5%
-   against simply holding. Fee figures hold (they accrue on volume); balance
-   figures are optimistic.
+1. **Swap router — RESOLVED 2026-07-20.** UniversalRouter
+   `0x8876789976decbfcbbbe364623c63652db8c0904` + Permit2, both verified
+   immutable. Found via Permit2 `Approval` logs (2,998 approvals, ~6x the next
+   address), not by sampling a swap — the first swap sampled led to an
+   upgradeable look-alike. Exact-amount, short-expiry approvals only.
+   REMAINING CONDITION: confirm the `V3_SWAP_EXACT_IN` encoding against the
+   verified source before Step 2 — this router is reported to be a modified
+   fork carrying an extra `minHopPriceX36` field in the v4 swap struct. Our
+   pool is V3 and the standard callback selector is present, so the V3 path is
+   likely untouched. Fallback if modified: direct `pool.swap()` with a guarded
+   callback (`msg.sender == POOL` check mandatory).
+2. **Circulating — RESOLVED 2026-07-20.** `total - dEaD`, unchanged.
+   `balanceOf(0x0)` is **0**, so there is no gap. Treasury holdings are
+   disclosed separately via `treasuryHeld()` and never netted out; netting
+   would make the supply figure drop on days nothing was burned.
+3. **Mainnet owner — RESOLVED 2026-07-20 (revised).** Safe 1.4.1 verified
+   available on this chain (bytecode keccak identical to Ethereum, `VERSION()`
+   returns 1.4.1). **Superseded by owner decision: single-key EOA (Rabby) owns
+   both contracts.** Accepted risks recorded in progress-tracker 2026-07-20:
+   single point of failure, no rotation without redeploy, and the miner key can
+   reroute reward flow. Deployer != owner still binds. Migration to Safe later
+   needs no contract change.
+4. **`VOLUME_THRESHOLD` — RESOLVED at 100e18** across four windows spanning
+   3.3x (see §5). Owner-settable within bounds; re-derive after a quiet week.
+5. **Impermanent loss — STILL OPEN, and now larger.** All treasury projections
+   track dollars deployed, not position value after price movement. Computed
+   2026-07-20: **fees stop covering IL at 5.8x**, and BUFFCAT moved 7x in 42
+   hours on 2026-07-18/19. The proposed seeding round
+   (`context/miner-v2-design.md` §5) places the IL on the treasury by design,
+   so this now requires a **hard cap on the treasury's BUFFCAT commitment**,
+   set before any round opens.
+
+## 5a. PURRGE / HYPURR trigger model (2026-07-20)
+
+```
+setArmed(bool)      onlyOwner  — the ON/OFF switch, readable by page and bot
+purrge()            onlyOwner  — armed && threshold && interval; atomic swap+burn
+hypurr(bytes32 tag) onlyOwner  — milestone burn, reason recorded on-chain
+rescuePurrge()      permissionless after 180 days of owner silence — anti-brick
+fundDividends()     permissionless
+collectFees()       permissionless
+```
+
+Everything owner-gated is **timing**. Nothing owner-gated is **destination**.
+
+`rescuePurrge()` is load-bearing: ownership is single-key (§10.3) and the vault
+has no withdrawal path, so without it a lost key strands the ETH permanently.
+It is unreachable while the owner is active.
 
 ## 11. Gate to leave Step 1
 
 - [ ] This document reviewed and committed to `context/`
 - [ ] `burn-vault-design.md` deleted or marked superseded
-- [ ] Swap router resolved, or the direct-`pool.swap()` route chosen
-- [ ] Open questions 2 and 3 answered or explicitly deferred with reasons
+- [x] Swap router resolved — UniversalRouter + Permit2 (§10.1)
+- [x] Open questions 2, 3 and 4 answered on on-chain evidence (§10)
+- [ ] **Pool `observationCardinality` increased and slots filled.** Currently
+      **1** (verified 2026-07-20): the pool stores no price history, so
+      `observe()` over 30 minutes REVERTS and every guarded swap would revert —
+      fails safe, but the vault would be inert.
+      `increaseObservationCardinalityNext(N)` is permissionless (~20k gas per
+      slot), but slots fill only as trades occur and 30 minutes must elapse
+      before an average exists. Size N from measured distinct-blocks-with-swaps
+      per 30-minute window x 3-4. **This is the remaining hard blocker.**
 - [ ] `architecture.md` updated: treasury in System Boundaries; invariant added
       for "value leaves the treasury only to pool, dividends, or DEAD"
 - [ ] `progress-tracker.md` updated: Step 1 complete, Step 2 next
