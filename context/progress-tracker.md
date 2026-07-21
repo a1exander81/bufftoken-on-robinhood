@@ -371,3 +371,218 @@ All figures below read from mainnet (chain 4663) via `cast` or the bot.
 - NOT canonical Uniswap — fork deployment. Uniswap doc addresses are WRONG here.
 - Swap router: still unidentified. Find via Blockscout (caller of pool.swap), or
   skip it by calling pool.swap() directly with a callback.
+## Session — Step 1 gate closure + v2 design (2026-07-20)
+
+Verification and design session. **No contract code written, no ritual step
+advanced, no deploys.** Every figure below read from chain 4663 or 46630 via
+`cast`, or from the volume bot. Sandbox compilation is not a ritual step.
+
+### Gate §11 — all four open questions closed on evidence
+
+**OQ 1 — Swap route: RESOLVED. UniversalRouter + Permit2.**
+- First candidate found on the pool, `0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc`,
+  is **NOT a router**: 752 bytes, `factory()` and `WETH9()` both revert,
+  Blockscout name `TransparentUpgradeableProxy`, implementation slot
+  `0x7e206578bf12dcb1102d5cdde5c6280fafc4109c`, admin slot
+  `0x75fc5cd1794921e617d97e4afa2ff93613413be3` (a contract, 872 bytes).
+  It is an upgradeable look-alike. Third-party integration docs for this chain
+  independently warn that router look-alikes exist here.
+- **Canonical router: `0x8876789976decbfcbbbe364623c63652db8c0904`.**
+  24,546 bytes; proxy implementation slot **all zeros (immutable)**;
+  `execute` (both overloads) and `uniswapV3SwapCallback` selectors present;
+  Blockscout **verified, name `UniversalRouter`**. Found by scanning Permit2
+  `Approval` logs — 2,998 approvals, ~6x the next address.
+- **Permit2 confirmed canonical** at `0x000000000022D473030F116dDEE9F6B43aC78BA3`:
+  identical length to Ethereum mainnet (9,152 bytes), **39 differing bytes**
+  (domain separator ~32 + chain-id low bytes ~3). Immutables, not different code.
+- Decision: use the router with **exact-amount, short-expiry Permit2
+  allowances**. Never a max approval.
+- Condition before writing code: read the verified source and confirm the
+  `V3_SWAP_EXACT_IN` encoding matches upstream. Integration docs describe this
+  router as a modified fork carrying an extra `minHopPriceX36` field in the v4
+  swap struct. Our pool is V3 and the standard callback selector is present, so
+  the V3 path is likely untouched — verify, do not assume. Fallback if modified:
+  direct `pool.swap()` with a guarded callback.
+
+**OQ 2 — Circulating supply: RESOLVED, definition unchanged and complete.**
+- `balanceOf(0x0)` = **0**. No burns to the zero address, so
+  `circulating = totalSupply() - balanceOf(dEaD)` has no gap.
+- Treasury holdings are **disclosed separately** via a `treasuryHeld()` view,
+  never netted out of circulating. Netting would make the supply figure drop on
+  days nothing was burned.
+
+**OQ 3 — Mainnet owner: RESOLVED (revised).**
+- Safe **verified available** on chain 4663: singleton 1.4.1
+  `0x41675C099F32341bf84BFc5382aF534df5C7461a` (23,579 B), factory 1.4.1
+  `0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67` (3,054 B), 1.3.0 pair present,
+  deterministic deploy proxy present (69 B).
+  Bytecode keccak **identical to Ethereum mainnet** for both 1.4.1 contracts.
+  `VERSION()` returns `1.4.1`.
+- **Superseded by owner decision: single-key EOA (Rabby) owns both
+  `BuffCatMiner` and the treasury.** Rationale: six years incident-free,
+  Rabby's pre-signature simulation, and PURRGE/HYPURR timing is discretionary
+  and latency-sensitive.
+- Accepted risks, explicit:
+  1. Single point of failure; no rotation without redeploying the miner.
+  2. Miner blast radius — a compromised key can `setFeatured`, `setBuyFee`,
+     `fund*`, `pause`, i.e. reroute reward flow. Higher-value exposure than the
+     treasury.
+  3. Treasury blast radius bounded by invariant 8 (destination allowlist). A
+     stolen key can mistime burns; it cannot extract.
+- Mitigations retained: `rescuePurrge()` after 180 days of owner silence;
+  `MAX_SWAP_BPS`, `MIN_SWAP_INTERVAL`, `MAX_DEVIATION_BPS`.
+- **Deployer != owner still binds.** Deploy with the throwaway; pass Rabby's
+  address as the `owner` constructor argument.
+- Safe remains deployed and verified here; migration later needs no contract
+  change.
+
+**OQ 4 — `VOLUME_THRESHOLD`: RESOLVED at `100e18`, unchanged, better supported.**
+- Four measurement windows: 13.3 / 27.7 / 31.1 / **43.2** weighted WETH/day —
+  a **3.3x spread**. No stable baseline exists to tune against.
+- 100 WETH fills in 2.3 days at the current rate, 3.6 days at 27.7, and ~7.5
+  days at the quietest observed — degrading into the 7-day fallback rather than
+  going dead. Nothing else in the observed range does both.
+- Reasoning reversed mid-session: an earlier recommendation to err high (200)
+  assumed the threshold was the trigger. With PURRGE owner-gated, a threshold
+  above ~7 days of volume never fires and the fallback opens the gate first.
+- Owner-settable within bounds. Re-derive after a quiet week.
+
+### Volume measurement — method correction
+
+- `grep -c "Total:"` **undercounts the denominator**: the bot prints no `Total:`
+  block for zero-volume intervals. 140 quiet + 359 headers = 499 samples.
+- Correct 42.1h window: **2,524 min covered against a 2,509 min wall-clock
+  span — effectively 100%**, no meaningful downtime.
+- Using the 360 `Total:` samples would have given 73.9 raw / 38.9 weighted
+  WETH/day and a 272 WETH threshold. True: 52.67 / 27.72 / 194.
+  **The denominator alone was a 40% overstatement.**
+- 24h window (288 samples, 1,440 min, zero price-failure samples):
+  raw 82.50, weighted **43.16** WETH/day, buy share 55.8%.
+- A single earlier claim that buys had collapsed to ~1.3% of flow was wrong —
+  extrapolated from two log lines. Actual buy share 55.8% across 500 samples.
+  Standing hazard "verify through a different mechanism" fired again.
+
+### On-chain state, 2026-07-20 (chain 4663)
+
+| | |
+| --- | --- |
+| `sqrtPriceX96` | 1.859e32, tick 155,221 -> ~5,506,000 BUFFCAT/WETH |
+| Price | ~$0.00033643 (down ~21% from the afternoon read) |
+| Pool WETH | 16.47 (~$30,500) |
+| Pool BUFFCAT | 77,488,559 (~$26,100) |
+| Pool total | **~$56,600** |
+| **`feeProtocol`** | **0** — no protocol skim; all volume figures are accurate |
+| **`observationCardinality`** | **1** — see blocker below |
+| Implied ETH/USD | ~$1,852 (bot median $1,846; Blockscout $1,867.89) |
+
+### NEW BLOCKER — pool observation cardinality
+
+`observationCardinality = 1`. The pool stores **one** price observation and no
+history. `treasury-design.md` §4 requires spot to sit within
+`MAX_DEVIATION_BPS` of a **30-minute TWAP** before any swap; `observe()` for a
+30-minute window **reverts** against this pool. As designed, every `swapEth()`
+would revert on the guard — fails safe, but the vault would be inert.
+
+- Fix: `increaseObservationCardinalityNext(N)` — permissionless, ~20k gas per
+  slot, no ownership needed.
+- **Not instant.** It creates empty slots that fill only as trades occur, and
+  30 minutes of real elapsed time must pass before an average exists. Must
+  happen well ahead of deployment.
+- Sizing needs measurement: count distinct blocks containing a swap per 30-min
+  window, take the busiest, multiply by 3-4 for headroom. Add to the bot.
+- **This must be added to `treasury-design.md` §11 as a gate item.** It was not
+  there, and it invalidates a design decision the document treats as settled.
+
+### CORRECTION — the 108,092,328 "already burnt" figure is not a constant
+
+Full `Transfer`-to-`dEaD` scan of chain history, chunked 500k blocks:
+
+- **34 burn events**, blocks 860,710 -> 14,400,566.
+- **Every one from the same contract**, `0x9eFdC1A8e6E94f16A228e44f3025E1f346EE0417`.
+- Cumulative at block 11,868,580 = **108,092,327** — precisely the figure
+  recorded on 2026-07-18 as a pre-existing constant. It was a mid-flight
+  snapshot of a live programme.
+- Current `dEaD` balance **116,310,332.925** (bot displays 116,310,333 —
+  matches exactly). Circulating **883,689,667**. **+8,218,005 burned in ~48h.**
+- Burner: 7,725 bytes, unverified, not a proxy, **BUFFCAT balance zero** (burns
+  everything it receives, atomically — in and out in the same block).
+  **29.788 ETH** held (~$55,600). Owner == creator ==
+  `0x7E035Fb048a31e0481b88074557415b1C187242B` (an EOA). Created block 659,727.
+- Source of its BUFFCAT: `0x7f03effbd7ceb22a3f80dd468f67ef27826acd85` —
+  **Blockscout-verified, name `LaunchLocker`**. The launchpad locked the launch
+  liquidity; those LP fees fund an automatic buyback-and-burn.
+- **Nobody on the team built or maintains this.** Running since ~1 day after
+  launch, averaging ~6.1M BUFFCAT/day.
+
+Consequences:
+1. **Invariant 5 must be rewritten.** It hardcodes 108,092,328 as the excluded
+   baseline. Express it as an internal counter incremented only by this
+   contract's own burns, with any `dEaD` baseline snapshotted at construction.
+2. Website and bot must show **`totalPurrged` separately from the `dEaD`
+   balance**. 116.3M (13% of supply) is the launchpad's, not ours.
+3. Every "already burnt" figure in the docs needs a date stamp.
+4. `treasury-design.md` §1's premise partly overlaps something already running
+   at larger scale. The **burn** half of the treasury is out-scaled; the
+   **dividend** half is not — nothing routes LP fees to `fundEthDividends`.
+
+### Design decisions taken
+
+- **PURRGE / HYPURR** replace the generic burn scope. Both owner-gated:
+  `setArmed(bool)`, `purrge()`, `hypurr(bytes32 tag)`, all `onlyOwner`.
+  `rescuePurrge()` permissionless after **180 days** of owner silence
+  (anti-brick only; unreachable while the owner is active — and load-bearing
+  now that ownership is single-key with no withdrawal path).
+  `fundDividends()` and `collectFees()` stay permissionless.
+- HYPURR sizing: `HYPURR_SWAP_BPS` **300** (3% of reserves) and
+  `HYPURR_VAULT_BPS` **5000** (50% of vault), whichever is smaller;
+  `HYPURR_INTERVAL` 7 days. PURRGE stays at `MAX_SWAP_BPS` 50 (0.5%).
+  Rationale: past ~5% of reserves, slippage on this pool outweighs tokens
+  gained. Both expressed in bps so they scale with pool depth.
+- Gas: on an Orbit L2, calldata dominates and execution is cheap. Structural
+  wins only — pack mutable state into one slot, immutables for every address,
+  custom errors, `bytes32` tags, cache `slot0()`. **No assembly or inlined
+  maths**; audit clarity outranks cents.
+- Comms: **no fixed or "up to" APY.** The rate is
+  dividends / TVL, and TVL is cumulative while the pot is not — the same
+  product falls ~50x over a year at a steady lock rate. Publish a **live rate
+  plus the historical range**.
+
+### v2 design drafted
+
+See `context/miner-v2-design.md`. Multi-pool `allocPoint` structure, three-tier
+program, single-sided ETH seeding round, streamed rewards. Sandbox-compiled
+(solc 0.8.24 + OZ 4.9.6, 13,812 bytes, zero warnings) and the distribution math
+simulated across 7 test groups including a 5,000-op solvency fuzz.
+**Not a ritual step and not a substitute for Foundry.**
+
+Key finding driving the seeding structure: **fees stop covering impermanent
+loss at 5.8x**, and BUFFCAT moved 7x in 42 hours this week. 50/50 LP seeding
+punishes exactly the bullish holders it would recruit. Single-sided ETH seeding
+places the IL on the treasury, where it is benign.
+
+### Open questions added
+
+1. **Sequencing: v2 now, or v1 + treasury first?** v2 restarts Track A at
+   Step 2 and supersedes the current testnet deploy. Not decided.
+2. Uniswap V3 LP positions are **NFTs** — staking them needs a
+   MasterChefV3-style design, not ERC-20 staking.
+3. Treasury BUFFCAT commitment cap for the seeding round.
+4. Whether the seeding round constitutes an offering — **qualified advice
+   required before accepting any deposit.**
+5. `treasury-design.md` §1 crossover table assumed ~100% of lock fees reaching
+   the treasury; the contract sends 25%. Re-run before external use.
+
+### Housekeeping
+
+- `CLAUDE.md` read order still lists **six** context docs; there are now ten.
+- Project mirror was **in sync** with `main` this session — `architecture.md`,
+  `treasury-design.md`, and `next-session.md` byte-identical to
+  `raw.githubusercontent.com/.../main`. First session without drift.
+- `context/burn-vault-design.md` confirmed **404 on `main`** — §11 gate item 2
+  satisfied.
+- Bot fixes (non-blocking): log `sellsWeth` from `sqrtPriceX96` so bot and
+  contract measure the same instrument; skip the first cycle after restart
+  (one zero-price sample observed, 0.26% of volume invisible); emit `Total:`
+  on quiet intervals so the denominator is honest; relabel `USDG` -> `USD` on
+  the burn card; add distinct-blocks-with-swaps per 30-min window for
+  cardinality sizing.
