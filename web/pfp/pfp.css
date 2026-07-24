@@ -1,0 +1,271 @@
+/* ---- isolation from the shared marketing stylesheet ----
+   buffcat-robinhood.css styles bare elements for the marketing page:
+     section { padding: clamp(84px,13vh,150px) clamp(18px,6vw,72px) }
+     h2      { font-size: clamp(30px,4.6vw,58px); margin-bottom: 24px }
+     h1,h2   { font-family:'Fredoka'; letter-spacing:-.02em }
+   Those leak in and blow the layout apart. Neutralise them here rather than
+   editing the shared file, which both pages depend on. */
+.pfp-wrap section{
+  position:static;
+  padding:0;
+  margin:0;
+  min-height:0;
+  background:none;
+}
+.pfp-wrap h2{
+  font-family:inherit;
+  font-size:12px;
+  line-height:1.2;
+  margin:0;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
+/* PFP maker — miner-page conventions: tokens only, no hardcoded hex
+   outside the :root blocks in buffcat-robinhood.css. */
+
+.pfp-wrap{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 380px;
+  gap:24px;
+  max-width:1200px;
+  margin:0 auto;
+  padding:24px 16px;
+}
+@media (max-width:900px){
+  .pfp-wrap{grid-template-columns:minmax(0,1fr);gap:18px;padding:16px 12px}
+}
+@media (max-width:420px){
+  .pfp-wrap{padding:12px 10px;gap:14px}
+}
+
+.pfp-wrap .pfp-stagebox{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  min-width:0;
+}
+@media (max-width:420px){
+  .pfp-wrap .pfp-stagebox{padding:10px}
+}
+#pfpStageWrap{
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+  width:100%;
+  max-width:520px;
+  margin:0 auto;
+  aspect-ratio:1/1;
+}
+#pfpStage{touch-action:none;width:100%;height:100%}
+#pfpStage canvas{display:block;max-width:100%}
+#pfpStageWrap::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  box-shadow:0 0 0 9999px rgba(6,8,11,.72);
+  pointer-events:none;
+  display:none;
+}
+#pfpStageWrap.circ::after{display:block}
+
+.pfp-tools{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+  justify-content:center;
+}
+.pfp-btn{
+  flex:0 1 auto;
+  white-space:nowrap;
+  font-weight:600;
+  background:var(--bg);
+  border:1px solid var(--line);
+  color:var(--text);
+  padding:9px 14px;
+  border-radius:10px;
+  font-size:13px;
+  cursor:pointer;
+  transition:border-color .15s,color .15s;
+}
+@media (max-width:420px){
+  .pfp-btn{padding:8px 10px;font-size:12px}
+  .pfp-tools{gap:6px}
+}
+.pfp-btn:hover:not(:disabled){border-color:var(--green);color:var(--green-soft)}
+.pfp-btn:disabled{opacity:.35;cursor:not-allowed}
+.pfp-btn.danger:hover:not(:disabled){border-color:var(--red);color:var(--red)}
+.pfp-btn:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+.pfp-hint{
+  text-align:center;
+  overflow-wrap:anywhere;
+  color:var(--dim);
+  font-size:12px;
+  font-weight:500;
+  margin-top:12px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+.pfp-side{display:flex;flex-direction:column;gap:22px;min-width:0}
+.pfp-sec-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.pfp-num{
+  color:var(--green);
+  font-size:13px;
+  font-weight:800;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+.pfp-sec-t{
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--text);
+}
+.pfp-rule{flex:1;height:1px;background:var(--line)}
+
+.pfp-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(88px,1fr));
+  gap:8px;
+}
+@media (max-width:420px){
+  .pfp-grid{grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px}
+  .pfp-tile{padding:8px 4px}
+  .pfp-tile span{font-size:10px}
+}
+.pfp-tile{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 6px;
+  cursor:pointer;
+  text-align:center;
+  transition:border-color .15s,transform .15s,background .15s;
+  position:relative;
+}
+.pfp-tile:hover{border-color:var(--green);transform:translateY(-2px)}
+.pfp-tile:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.pfp-tile.on{border-color:var(--green);background:var(--green-dim)}
+.pfp-tile.on::after{
+  content:"";
+  position:absolute;
+  top:6px;right:6px;
+  width:7px;height:7px;
+  border-radius:50%;
+  background:var(--green);
+}
+.pfp-tile img{
+  width:44px;height:32px;
+  object-fit:contain;
+  display:block;
+  margin:0 auto 6px;
+}
+.pfp-tile span{
+  font-size:11px;
+  font-weight:600;
+  color:var(--text);
+  line-height:1.25;
+  display:block;
+}
+
+.pfp-swatches{display:flex;gap:10px;flex-wrap:wrap}
+.pfp-sw{
+  width:46px;height:46px;
+  border-radius:11px;
+  border:2px solid transparent;
+  cursor:pointer;
+  transition:transform .15s,border-color .15s;
+}
+.pfp-sw:hover{transform:scale(1.06)}
+.pfp-sw:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.pfp-sw.on{border-color:var(--green)}
+.pfp-sw.tp{
+  background-image:
+    linear-gradient(45deg,var(--line) 25%,transparent 25%),
+    linear-gradient(-45deg,var(--line) 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,var(--line) 75%),
+    linear-gradient(-45deg,transparent 75%,var(--line) 75%);
+  background-size:12px 12px;
+  background-position:0 0,0 6px,6px -6px,-6px 0;
+  background-color:var(--bg);
+}
+
+.pfp-cta{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:15px;
+  font-weight:700;
+}
+.pfp-cta.primary{
+  background:linear-gradient(135deg,var(--green),var(--green-soft));
+  color:var(--ink);
+}
+.pfp-cta.secondary{
+  background:transparent;
+  border:1px solid var(--green);
+  color:var(--green);
+  margin-top:10px;
+}
+.pfp-cta:hover{filter:brightness(1.08)}
+.pfp-cta:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+.pfp-note{
+  font-size:12px;
+  font-weight:500;
+  color:var(--dim);
+  margin-top:9px;
+  line-height:1.55;
+}
+
+.pfp-toast{
+  position:fixed;
+  bottom:22px;left:50%;
+  transform:translateX(-50%);
+  background:var(--panel);
+  border:1px solid var(--green);
+  color:var(--text);
+  padding:11px 20px;
+  border-radius:10px;
+  font-size:13px;
+  opacity:0;
+  transition:opacity .25s;
+  pointer-events:none;
+  z-index:99;
+}
+.pfp-toast.show{opacity:1}
+
+@media (prefers-reduced-motion:reduce){
+  .pfp-tile,.pfp-sw,.pfp-btn,.pfp-toast{transition:none}
+  .pfp-tile:hover,.pfp-sw:hover{transform:none}
+}
+
+/* belt and braces: nothing may push the page wider than the viewport */
+html,body{max-width:100%;overflow-x:hidden}
+
+/* theme toggle — shared theme.js binds to #themeToggle */
+.pfp-topbar{
+  max-width:1200px;
+  margin:0 auto;
+  padding:16px 16px 0;
+  display:flex;
+  justify-content:flex-end;
+}
+#themeToggle{
+  background:var(--panel);
+  border:1px solid var(--line);
+  color:var(--text);
+  width:40px;height:40px;
+  border-radius:10px;
+  font-size:17px;
+  line-height:1;
+  cursor:pointer;
+}
+#themeToggle:hover{border-color:var(--green)}
+#themeToggle:focus-visible{outline:2px solid var(--green);outline-offset:2px}
