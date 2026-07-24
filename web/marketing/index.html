@@ -11,6 +11,7 @@
 <link rel="icon" type="image/png" href="/assets/buffcircle.png">
 <script src="/web/shared/theme.js"></script>
 <link rel="stylesheet" href="/web/shared/buffcat-robinhood.css?v=20260715o">
+<link rel="stylesheet" href="/web/pfp/pfp.css?v=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -105,6 +106,7 @@
     <a href="#chart">Chart</a>
     <a href="#buy">How to Buy</a>
     <a href="#community">Community</a>
+    <a href="#pfp">PFP Maker</a>
     <a href="/mining">Mining</a>
     <button class="nav-cta connect-nav-btn" data-connect-wallet type="button">Connect</button>
     <button class="nav-cta" data-swap>Buy $BUFFCAT</button>
@@ -357,6 +359,75 @@
     </div>
   </section>
 
+
+  <!-- ============ PFP MAKER ============ -->
+  <section id="pfp">
+    <div class="wrap">
+      <div class="eyebrow">Make yours</div>
+      <h2 class="reveal">Gear up the <span class="up">buff cat</span></h2>
+      <p class="lede reveal">Pick your gear, drag it where you want it, and export at 1000&times;1000. <strong>No signup, nothing stored — it all happens in your browser.</strong></p>
+    </div>
+
+    <div class="pfp-wrap">
+      <section class="pfp-stagebox" aria-label="PFP canvas">
+        <div id="pfpStageWrap"><div id="pfpStage"></div></div>
+
+        <div class="pfp-tools">
+          <button class="pfp-btn" id="pfpBigger"  type="button" disabled>+ Bigger</button>
+          <button class="pfp-btn" id="pfpSmaller" type="button" disabled>&minus; Smaller</button>
+          <button class="pfp-btn" id="pfpRotL"    type="button" disabled>&#8634; Rotate</button>
+          <button class="pfp-btn" id="pfpRotR"    type="button" disabled>&#8635; Rotate</button>
+          <button class="pfp-btn" id="pfpFlip"    type="button" disabled>&#8651; Flip</button>
+          <button class="pfp-btn" id="pfpFwd"     type="button" disabled>&uarr; Front</button>
+          <button class="pfp-btn" id="pfpBack"    type="button" disabled>&darr; Back</button>
+          <button class="pfp-btn danger" id="pfpDel" type="button" disabled>&times; Delete</button>
+        </div>
+
+        <div class="pfp-tools">
+          <button class="pfp-btn" id="pfpUndo"   type="button" disabled>&#10226; Undo</button>
+          <button class="pfp-btn" id="pfpRand"   type="button">Randomize</button>
+          <button class="pfp-btn" id="pfpCircle" type="button">&#9678; Circle preview</button>
+          <button class="pfp-btn danger" id="pfpReset" type="button">Reset</button>
+        </div>
+
+        <p class="pfp-hint">tap gear to add &middot; drag to move &middot; corner dot resizes and rotates</p>
+      </section>
+
+      <div class="pfp-side">
+        <section>
+          <div class="pfp-sec-h">
+            <span class="pfp-num">1</span>
+            <h2 class="pfp-sec-t">Pick your gear</h2>
+            <span class="pfp-rule"></span>
+          </div>
+          <div class="pfp-grid" id="pfpGear"></div>
+        </section>
+
+        <section>
+          <div class="pfp-sec-h">
+            <span class="pfp-num">2</span>
+            <h2 class="pfp-sec-t">Background</h2>
+            <span class="pfp-rule"></span>
+          </div>
+          <div class="pfp-swatches" id="pfpBgs"></div>
+        </section>
+
+        <section>
+          <div class="pfp-sec-h">
+            <span class="pfp-num">3</span>
+            <h2 class="pfp-sec-t">Export</h2>
+            <span class="pfp-rule"></span>
+          </div>
+          <button class="pfp-cta primary"   id="pfpDownload" type="button">Download PFP (PNG)</button>
+          <button class="pfp-cta secondary" id="pfpShare"    type="button">Share to X</button>
+          <p class="pfp-note">Exports at 1000&times;1000. Use circle preview to check nothing important gets cropped &mdash; X renders profile pictures as circles.</p>
+        </section>
+      </div>
+    </div>
+
+    <div class="pfp-toast" id="pfpToast" role="status" aria-live="polite"></div>
+  </section>
+
   <!-- ============ HOW TO BUY ============ -->
   <section id="buy">
     <div class="wrap">
@@ -530,5 +601,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
 <script src="/vendor/ethers-5.7.2.umd.min.js"></script>
 <script src="/web/marketing/buffcat-robinhood.js?v=20260715p"></script>
+<script src="/vendor/konva-9.3.6.min.js"></script>
+<script src="/web/pfp/pfp.js?v=1"></script>
 </body>
 </html>
