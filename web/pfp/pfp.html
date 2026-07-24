@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BUFFCAT — PFP Maker</title>
+<meta name="description" content="Gear up the buff cat and make your profile picture.">
+<meta property="og:title" content="BUFFCAT — PFP Maker">
+<meta property="og:description" content="Gear up the buff cat and make your profile picture.">
+<meta property="og:image" content="/assets/buffcat-body.png">
+<link rel="stylesheet" href="/web/shared/buffcat-robinhood.css">
+<link rel="stylesheet" href="/web/pfp/pfp.css">
+<script src="/web/shared/theme.js"></script>
+</head>
+<body>
+
+<div class="pfp-topbar">
+  <button id="themeToggle" type="button" title="Theme">🌙</button>
+</div>
+
+<main class="pfp-wrap">
+  <section class="pfp-stagebox" aria-label="PFP canvas">
+    <div id="pfpStageWrap"><div id="pfpStage"></div></div>
+
+    <div class="pfp-tools">
+      <button class="pfp-btn" id="pfpBigger"  type="button" disabled>+ Bigger</button>
+      <button class="pfp-btn" id="pfpSmaller" type="button" disabled>&minus; Smaller</button>
+      <button class="pfp-btn" id="pfpRotL"    type="button" disabled>&#8634; Rotate</button>
+      <button class="pfp-btn" id="pfpRotR"    type="button" disabled>&#8635; Rotate</button>
+      <button class="pfp-btn" id="pfpFlip"    type="button" disabled>&#8651; Flip</button>
+      <button class="pfp-btn" id="pfpFwd"     type="button" disabled>&uarr; Front</button>
+      <button class="pfp-btn" id="pfpBack"    type="button" disabled>&darr; Back</button>
+      <button class="pfp-btn danger" id="pfpDel" type="button" disabled>&times; Delete</button>
+    </div>
+
+    <div class="pfp-tools">
+      <button class="pfp-btn" id="pfpUndo"   type="button" disabled>&#10226; Undo</button>
+      <button class="pfp-btn" id="pfpRand"   type="button">Randomize</button>
+      <button class="pfp-btn" id="pfpCircle" type="button">&#9678; Circle preview</button>
+      <button class="pfp-btn danger" id="pfpReset" type="button">Reset</button>
+    </div>
+
+    <p class="pfp-hint">tap gear to add &middot; drag to move &middot; corner dot resizes and rotates</p>
+  </section>
+
+  <div class="pfp-side">
+    <section>
+      <div class="pfp-sec-h">
+        <span class="pfp-num">1</span>
+        <h2 class="pfp-sec-t">Pick your gear</h2>
+        <span class="pfp-rule"></span>
+      </div>
+      <div class="pfp-grid" id="pfpGear"></div>
+    </section>
+
+    <section>
+      <div class="pfp-sec-h">
+        <span class="pfp-num">2</span>
+        <h2 class="pfp-sec-t">Background</h2>
+        <span class="pfp-rule"></span>
+      </div>
+      <div class="pfp-swatches" id="pfpBgs"></div>
+    </section>
+
+    <section>
+      <div class="pfp-sec-h">
+        <span class="pfp-num">3</span>
+        <h2 class="pfp-sec-t">Export</h2>
+        <span class="pfp-rule"></span>
+      </div>
+      <button class="pfp-cta primary"   id="pfpDownload" type="button">Download PFP (PNG)</button>
+      <button class="pfp-cta secondary" id="pfpShare"    type="button">Share to X</button>
+      <p class="pfp-note">Exports at 1000&times;1000. Use circle preview to check nothing important gets cropped — X renders profile pictures as circles.</p>
+    </section>
+  </div>
+</main>
+
+<div class="pfp-toast" id="pfpToast" role="status" aria-live="polite"></div>
+
+<script src="/vendor/konva-9.3.6.min.js"></script>
+<script src="/web/pfp/pfp.js"></script>
+</body>
+</html>
