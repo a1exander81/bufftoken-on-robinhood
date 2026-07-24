@@ -586,3 +586,25 @@ places the IL on the treasury, where it is benign.
   on quiet intervals so the denominator is honest; relabel `USDG` -> `USD` on
   the burn card; add distinct-blocks-with-swaps per 30-min window for
   cardinality sizing.
+
+## Session — PFP maker (2026-07-24)
+Frontend only. No contract work, no ritual step advanced.
+
+- Shipped `/pfp` (PR #18, main 7faaa11): Konva 9.3.6 vendored, 11 gear pieces,
+  5 backgrounds incl. transparent, 1000x1000 export, share-to-X via Web Share
+  API with download fallback, randomize / undo / layer order / circle-crop
+  preview. Responsive stage 240-520px; export size is independent of display.
+- Files: `web/pfp/{pfp.html,pfp.js,pfp.css}`, `assets/gear/*.png`,
+  `assets/buffcat-body.png`, `vendor/konva-9.3.6.min.js`, `/pfp` rewrite.
+- Gear PNGs are TRIMMED to bounding box. Originals were 600x200 with up to 74%
+  transparent padding, which put the rotation pivot off the artwork. The
+  `at`/`scale` values in pfp.js are calibrated to the trimmed sizes — do not
+  swap the originals back in.
+- Body art has 3px headroom above the ears and 0 bottom margin, so it is drawn
+  at 86% inset (BODY_SCALE/BODY_X/BODY_Y). If re-exported with padding, set
+  those to 1/0/0.
+- `buffcat-robinhood.css` styles bare `section` with 84-150px padding and `h2`
+  with clamp(30px,4.6vw,58px). Both leak into any new page using those tags;
+  pfp.css carries scoped resets. Worth knowing before building another page.
+- Outstanding art: `gloves.png` never supplied; `earring.png` has a small stray
+  element near the hoop (~4% of its pixels, connected so not trimmable).
