@@ -4,15 +4,15 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/web/marketing/index.html"
+      "destination": "/web/marketing/index"
     },
     {
       "source": "/mining",
-      "destination": "/web/miner/mining.html"
+      "destination": "/web/miner/mining"
     },
     {
       "source": "/pfp",
-      "destination": "/web/pfp/pfp.html"
+      "destination": "/web/pfp/pfp"
     }
   ],
   "headers": [
