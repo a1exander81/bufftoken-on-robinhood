@@ -608,3 +608,35 @@ Frontend only. No contract work, no ritual step advanced.
   pfp.css carries scoped resets. Worth knowing before building another page.
 - Outstanding art: `gloves.png` never supplied; `earring.png` has a small stray
   element near the hoop (~4% of its pixels, connected so not trimmable).
+
+## Session — Homepage PFP embed + production deploy fix (2026-07-24)
+Frontend/infra only. No contract work.
+
+- Embedded the PFP maker on the homepage after #testimonials (PR #19, main
+  a2a2c3b). Nav link added. Reuses web/pfp/pfp.{css,js}; standalone /pfp stays.
+  Embed omits .pfp-topbar because the nav already owns #themeToggle.
+
+### Production deploy was broken three ways (all fixed)
+1. NO production deploy since 2026-07-15. Every build was Preview, none
+   promoted -> domain served a 9-day-stale build. Cause: Vercel Production
+   Branch not set to `main`. STILL UNSET — deploys remain manual via
+   `npx vercel --prod` until fixed in Settings -> Git.
+2. `cleanUrls:true` 308-redirects /path.html -> /path, but the vercel.json
+   rewrite DESTINATIONS ended in .html, and rewrites do NOT follow redirects
+   -> every route 404'd including root. Fixed: destinations now omit .html
+   (/web/pfp/pfp, not /web/pfp/pfp.html). Latent since the web/ restructure;
+   only surfaced on the first prod deploy.
+3. The stale build publicly served the QUARANTINED contract's economics
+   (2% buy fee, 4 tiers, notifyRewardAmount, 3% claim) AND the rotated/exposed
+   fee wallet 0xc2413696576176d1e31D55a2DEdA609906a15596. Gone with the new
+   build. Watch that this address never returns to any deployed surface.
+
+### Deploy hazards to remember
+- `npx vercel --prod` deploys the LOCAL working dir/branch, not origin/main.
+  Merge PRs BEFORE deploying from main, or a later deploy silently reverts.
+- Verify a deploy with curl status codes on the real domain, not the Vercel
+  dashboard "Ready" badge — Ready means built, not promoted.
+
+### Outstanding
+- Vercel Settings -> Git -> Production Branch = main (removes manual deploys).
+- Art: gloves.png still missing; earring.png stray element near the hoop.
