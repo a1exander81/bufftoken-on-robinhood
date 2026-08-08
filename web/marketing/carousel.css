@@ -1,0 +1,68 @@
+/* Buff'mania 3D fan carousel — extends the shared tokens in buffcat-robinhood.css.
+   Swap-in point for new images: see the CAROUSEL card markup in index.html
+   (search for id="buffCarouselTrack"). Each .buff-card is one slide. */
+
+.buff-carousel-card{
+  display:flex;flex-direction:column;align-items:center;
+  gap:20px;justify-content:center;min-height:420px;
+  overflow:visible; /* base .art-card clips overflow; the carousel needs room for its glow */
+}
+
+.buff-carousel{
+  width:100%;display:flex;flex-direction:column;align-items:center;gap:16px;
+}
+
+.buff-carousel-stage{
+  position:relative;width:100%;height:clamp(230px,27vw,300px);
+  perspective:1400px;perspective-origin:50% 32%;
+}
+
+.buff-carousel-track{
+  position:absolute;inset:0;transform-style:preserve-3d;
+}
+
+.buff-card{
+  position:absolute;top:50%;left:50%;
+  width:clamp(104px,14vw,168px);
+  aspect-ratio:3/4;
+  transform-style:preserve-3d;
+  will-change:transform,filter,opacity;
+  cursor:pointer;
+  outline:none;
+}
+
+.buff-card-inner{
+  width:100%;height:100%;border-radius:16px;overflow:hidden;position:relative;
+  background:linear-gradient(160deg,#141d19,#070b09);
+  border:2px solid rgba(255,172,58,.22);
+  transition:border-color .25s ease;
+}
+.buff-card-inner img{width:100%;height:100%;object-fit:cover;display:block}
+.buff-card-inner::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05), inset 0 -34px 40px -22px rgba(0,0,0,.65);
+  pointer-events:none;
+}
+.buff-card:focus-visible .buff-card-inner{
+  border-color:var(--green);
+  box-shadow:0 0 0 3px rgba(0,200,5,.35);
+}
+
+.buff-carousel-caption{
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--green-soft);background:rgba(0,200,5,.08);border:1px solid var(--line);
+  border-radius:999px;padding:8px 20px;text-align:center;
+  min-width:120px;
+  transition:opacity .18s ease;
+}
+.buff-carousel-caption.swap{opacity:0}
+
+@media(max-width:760px){
+  .buff-carousel-stage{height:clamp(180px,54vw,230px)}
+  .buff-card{width:clamp(90px,27vw,128px)}
+  .buff-carousel-card{min-height:340px}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .buff-carousel-caption{transition:none}
+}

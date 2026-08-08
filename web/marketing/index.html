@@ -11,6 +11,7 @@
 <link rel="icon" type="image/png" href="/assets/buffcircle.png">
 <script src="/web/shared/theme.js"></script>
 <link rel="stylesheet" href="/web/shared/buffcat-robinhood.css?v=20260715o">
+<link rel="stylesheet" href="/web/marketing/carousel.css?v=1">
 <link rel="stylesheet" href="/web/pfp/pfp.css?v=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -130,7 +131,6 @@
     </p>
     <div class="hero-ctas">
       <button class="btn btn-green" data-swap>⇅ Buy on Uniswap v3</button>
-      <a class="btn btn-ghost" href="https://t.me/based_eth_bot?start=r_rentardio" target="_blank" rel="noopener">🤖 Buy via Based Bot</a>
       <a class="btn btn-ghost" href="#chart">📈 View Chart</a>
     </div>
     <div class="ca-bar">
@@ -225,45 +225,36 @@
         </div>
       </div>
       <div class="split-art reveal">
-        <div class="art-card" data-tilt>
-          <!-- Original candle-chart art -->
-          <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Green candlestick chart going up">
-            <!-- axis -->
-            <line x1="40" y1="20" x2="40" y2="350" stroke="#1c2b26" stroke-width="3"/>
-            <line x1="40" y1="350" x2="380" y2="350" stroke="#1c2b26" stroke-width="3"/>
-            <g stroke="#13221c" stroke-width="1.5">
-              <line x1="40" y1="90" x2="380" y2="90"/><line x1="40" y1="155" x2="380" y2="155"/>
-              <line x1="40" y1="220" x2="380" y2="220"/><line x1="40" y1="285" x2="380" y2="285"/>
-            </g>
-            <!-- candles -->
-            <g stroke-linecap="round">
-              <line x1="80" y1="250" x2="80" y2="330" stroke="#FF5000" stroke-width="4"/>
-              <rect x="66" y="268" width="28" height="46" rx="4" fill="#FF5000"/>
-              <line x1="130" y1="230" x2="130" y2="316" stroke="#00C805" stroke-width="4"/>
-              <rect x="116" y="244" width="28" height="58" rx="4" fill="#00C805"/>
-              <line x1="180" y1="180" x2="180" y2="280" stroke="#00C805" stroke-width="4"/>
-              <rect x="166" y="196" width="28" height="66" rx="4" fill="#00C805"/>
-              <line x1="230" y1="196" x2="230" y2="262" stroke="#FF5000" stroke-width="4"/>
-              <rect x="216" y="210" width="28" height="36" rx="4" fill="#FF5000"/>
-              <line x1="280" y1="110" x2="280" y2="236" stroke="#00C805" stroke-width="4"/>
-              <rect x="266" y="128" width="28" height="88" rx="4" fill="#00C805"/>
-              <line x1="330" y1="40" x2="330" y2="170" stroke="#00C805" stroke-width="4"/>
-              <rect x="316" y="58" width="28" height="94" rx="4" fill="#00C805"/>
-            </g>
-            <!-- dog paw at the top of the last candle -->
-            <g transform="translate(330,36)">
-              <ellipse cx="0" cy="6" rx="14" ry="11" fill="#d9a35e" stroke="#8a5a2b" stroke-width="3"/>
-              <circle cx="-11" cy="-8" r="5" fill="#d9a35e" stroke="#8a5a2b" stroke-width="2.5"/>
-              <circle cx="0" cy="-11" r="5" fill="#d9a35e" stroke="#8a5a2b" stroke-width="2.5"/>
-              <circle cx="11" cy="-8" r="5" fill="#d9a35e" stroke="#8a5a2b" stroke-width="2.5"/>
-            </g>
-            <!-- sparkle -->
-            <g fill="#3BE477">
-              <path d="M360 24 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3 z"/>
-              <path d="M70 60 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3 z" opacity=".7"/>
-            </g>
-          </svg>
-          <div class="art-caption">Chart Pattern: Ascending Doggo · Very Bullish</div>
+        <div class="art-card buff-carousel-card">
+          <!-- BUFF'MANIA 3D fan carousel. To add more images, drop the file in
+               /assets/carousel and duplicate a .buff-card block below with its
+               <img src> and a short data-label. No JS edits needed. -->
+          <div class="buff-carousel" id="buffCarousel">
+            <div class="buff-carousel-stage" id="buffCarouselStage">
+              <div class="buff-carousel-track" id="buffCarouselTrack">
+                <div class="buff-card" data-label="Old Money">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-gangster.jpg" alt="Buff Cat dressed as a sharp 1920s gangster, tipping his hat" loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="He Sold? Pump It">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-hotline.jpg" alt="Buff Cat in a suit taking a phone call" loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="Buff Cat Vegan">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-vegan.jpg" alt="Buff Cat movie poster parody, The 40 Year-Old Vegan" loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="Nip And Nipper">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-nip-nipper.jpg" alt="Buff Cat movie poster parody, Nip and Nipper, flexing next to a crying white cat" loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="We're Gucci">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-gucci.jpg" alt="Buff Cat flexing in sunglasses in front of an explosion" loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="Diamond Paws">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-diamond-paws.jpg" alt="Buff Cat carrying a smaller crying cat on his shoulders in front of a neon Robinhood arrow" loading="lazy"></div>
+                </div>
+              </div>
+            </div>
+            <div class="buff-carousel-caption" id="buffCarouselCaption">Old Money</div>
+          </div>
+          <div class="art-caption">BUFF'MANIA GALLERY · SPINS SLOWLY · HOVER TO PAUSE</div>
         </div>
       </div>
     </div>
@@ -274,16 +265,16 @@
     <div class="wrap">
       <div class="eyebrow">Live Data</div>
       <h2 class="reveal">The <span class="up">Chart</span></h2>
-      <p class="lede reveal">Live from DexScreener — $BUFFCAT on Robinhood Chain. Watch the mascot bench-press the order book in real time.</p>
+      <p class="lede reveal">Live from GeckoTerminal — $BUFFCAT on Robinhood Chain. Watch the mascot bench-press the order book in real time.</p>
       <div class="chart-shell reveal">
         <div class="chart-head">
           <span class="pair">▲ BUFFCAT / ROBINHOOD CHAIN</span>
-          <a href="https://dexscreener.com/robinhood/0xD80aFe3Be875a14155FDd96D39669A6734E12036" target="_blank" rel="noopener">Open on DexScreener ↗</a>
+          <a href="https://www.geckoterminal.com/robinhood/pools/0xde543192e1939ee2538db77ccc225aa67412bea6" target="_blank" rel="noopener">Open on GeckoTerminal ↗</a>
         </div>
-        <div id="dexscreener-embed">
+        <div id="geckoterminal-embed">
           <iframe
-            src="https://dexscreener.com/robinhood/0xD80aFe3Be875a14155FDd96D39669A6734E12036?embed=1&theme=dark&trades=0&info=0"
-            title="BUFFCAT chart on DexScreener" loading="lazy"></iframe>
+            src="https://www.geckoterminal.com/robinhood/pools/0xde543192e1939ee2538db77ccc225aa67412bea6?embed=1&info=0&swaps=0&light_chart=0&chart_type=price&resolution=15m&bg_color=0A0F13"
+            title="BUFFCAT chart on GeckoTerminal" loading="lazy" allow="clipboard-write"></iframe>
         </div>
       </div>
     </div>
@@ -441,7 +432,7 @@
       </div>
       <div class="hero-ctas reveal" style="justify-content:flex-start;margin-top:40px">
         <button class="btn btn-green" data-swap>⇅ Buy $BUFFCAT now</button>
-        <a class="btn btn-ghost" href="https://dexscreener.com/robinhood/0xD80aFe3Be875a14155FDd96D39669A6734E12036" target="_blank" rel="noopener">📈 DexScreener</a>
+        <a class="btn btn-ghost" href="https://www.geckoterminal.com/robinhood/pools/0xde543192e1939ee2538db77ccc225aa67412bea6" target="_blank" rel="noopener">📈 GeckoTerminal</a>
       </div>
     </div>
   </section>
@@ -552,7 +543,7 @@
       <a href="#buy">How to Buy</a>
       <a href="https://x.com/BuffCat_RHC" target="_blank" rel="noopener">X / Twitter</a>
       <a href="https://t.me/BuffCat_RH" target="_blank" rel="noopener">Telegram</a>
-      <a href="https://dexscreener.com/robinhood/0xD80aFe3Be875a14155FDd96D39669A6734E12036" target="_blank" rel="noopener">DexScreener</a>
+      <a href="https://www.geckoterminal.com/robinhood/pools/0xde543192e1939ee2538db77ccc225aa67412bea6" target="_blank" rel="noopener">GeckoTerminal</a>
     </div>
   </div>
   <div class="legal">
@@ -588,6 +579,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
 <script src="/vendor/ethers-5.7.2.umd.min.js"></script>
 <script src="/web/marketing/buffcat-robinhood.js?v=20260715p"></script>
+<script src="/web/marketing/carousel.js?v=1"></script>
 <script src="/vendor/konva-9.3.6.min.js"></script>
 <script src="/web/pfp/pfp.js?v=1"></script>
 </body>
