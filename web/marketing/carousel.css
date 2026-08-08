@@ -1,11 +1,15 @@
-/* Buff'mania 3D fan carousel — extends the shared tokens in buffcat-robinhood.css.
+/* Buff'mania fanned-deck carousel — extends the shared tokens in buffcat-robinhood.css.
+   Rest state: cards pivot from a shared bottom point and sit almost closed,
+   each hiding most of the one behind it. Hover/focus/tap spreads the fan open.
    Swap-in point for new images: see the CAROUSEL card markup in index.html
-   (search for id="buffCarouselTrack"). Each .buff-card is one slide. */
+   (search for id="buffCarouselTrack"). Each .buff-card is one slide — order in
+   the HTML determines the fan order, and the middle card in the list is
+   automatically the one centered/on top. */
 
 .buff-carousel-card{
   display:flex;flex-direction:column;align-items:center;
   gap:20px;justify-content:center;min-height:420px;
-  overflow:visible; /* base .art-card clips overflow; the carousel needs room for its glow */
+  overflow:visible; /* base .art-card clips overflow; the fan needs room past the panel edge */
 }
 
 .buff-carousel{
@@ -14,55 +18,75 @@
 
 .buff-carousel-stage{
   position:relative;width:100%;height:clamp(230px,27vw,300px);
-  perspective:1400px;perspective-origin:50% 32%;
 }
 
 .buff-carousel-track{
-  position:absolute;inset:0;transform-style:preserve-3d;
+  position:absolute;inset:0;
 }
 
 .buff-card{
-  position:absolute;top:50%;left:50%;
-  width:clamp(104px,14vw,168px);
-  aspect-ratio:3/4;
-  transform-style:preserve-3d;
-  will-change:transform,filter,opacity;
+  --deg-rest: 0deg;
+  --deg-hover: 0deg;
+  --card-scale: 1;
+  position:absolute;left:50%;bottom:6%;
+  width:clamp(100px,14vw,168px);
+  aspect-ratio:4/5;
+  transform-origin:50% 100%; /* shared pivot: every card fans from this one point */
+  transform:translateX(-50%) rotate(var(--deg-rest)) scale(var(--card-scale));
+  transition:transform .55s cubic-bezier(.19,.85,.24,1), filter .35s ease;
   cursor:pointer;
   outline:none;
+}
+
+.buff-carousel-stage:hover .buff-card,
+.buff-carousel-stage:focus-within .buff-card,
+.buff-carousel-stage.is-spread .buff-card{
+  transform:translateX(-50%) rotate(var(--deg-hover)) scale(var(--card-scale));
+}
+
+.buff-card:hover,
+.buff-card:focus-visible{
+  --card-scale: 1.1;
+  z-index:999 !important;
+  filter:brightness(1) !important;
 }
 
 .buff-card-inner{
   width:100%;height:100%;border-radius:16px;overflow:hidden;position:relative;
   background:linear-gradient(160deg,#141d19,#070b09);
-  border:2px solid rgba(255,172,58,.22);
-  transition:border-color .25s ease;
+  border:2px solid rgba(255,172,58,.28);
+  box-shadow:0 14px 30px rgba(0,0,0,.55), 0 0 0 1px rgba(0,200,5,.08);
+  transition:border-color .25s ease, box-shadow .25s ease;
 }
-.buff-card-inner img{width:100%;height:100%;object-fit:cover;display:block}
+.buff-card-inner img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
 .buff-card-inner::after{
   content:"";position:absolute;inset:0;border-radius:inherit;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05), inset 0 -34px 40px -22px rgba(0,0,0,.65);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), inset 0 -24px 32px -18px rgba(0,0,0,.6);
   pointer-events:none;
 }
+.buff-card:hover .buff-card-inner,
 .buff-card:focus-visible .buff-card-inner{
   border-color:var(--green);
-  box-shadow:0 0 0 3px rgba(0,200,5,.35);
+  box-shadow:0 20px 44px rgba(0,0,0,.6), 0 0 24px rgba(0,200,5,.35);
 }
 
 .buff-carousel-caption{
   font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;
   color:var(--green-soft);background:rgba(0,200,5,.08);border:1px solid var(--line);
   border-radius:999px;padding:8px 20px;text-align:center;
-  min-width:120px;
-  transition:opacity .18s ease;
+  min-width:120px;min-height:16px;
+  opacity:0;transform:translateY(4px);
+  transition:opacity .25s ease, transform .25s ease;
 }
-.buff-carousel-caption.swap{opacity:0}
+.buff-carousel-caption.show{opacity:1;transform:translateY(0)}
 
 @media(max-width:760px){
   .buff-carousel-stage{height:clamp(180px,54vw,230px)}
-  .buff-card{width:clamp(90px,27vw,128px)}
+  .buff-card{width:clamp(86px,25vw,120px)}
   .buff-carousel-card{min-height:340px}
 }
 
 @media (prefers-reduced-motion: reduce){
+  .buff-card{transition:none}
   .buff-carousel-caption{transition:none}
 }
