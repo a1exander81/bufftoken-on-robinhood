@@ -2,10 +2,15 @@
   "use strict";
 
   // -------------------------------------------------------------------
-  // Buff'mania 3D fan carousel.
-  // Reads whatever .buff-card elements already exist inside
+  // Buff'mania fanned-deck carousel.
+  // Every card shares one pivot point (bottom-center of the stage) and is
+  // positioned purely with `rotate()` — that's what makes it fan out like a
+  // hand of cards instead of an arranged grid. Rest state uses a tight angle
+  // step so cards mostly overlap; hover/focus/tap widens the step so they
+  // spread open. Reads whatever .buff-card elements already exist inside
   // #buffCarouselTrack in index.html — to add more images later, just
-  // duplicate a .buff-card block in the HTML (no JS edits needed).
+  // duplicate a .buff-card block in the HTML (no JS edits needed). The card
+  // in the middle of the list becomes the centered, front-most card.
   // -------------------------------------------------------------------
 
   const stage = document.getElementById("buffCarouselStage");
@@ -19,137 +24,58 @@
 
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Depth palette pulled straight from the site's own tokens:
-  // shadow -> gold -> green as a card swings to the front.
-  const COL_BACK = [4, 10, 8];
-  const COL_MID = [232, 179, 60];
-  const COL_FRONT = [0, 200, 5];
-
-  const lerp = (a, b, t) => a + (b - a) * t;
-  function mixColor(depth) {
-    if (depth > 0.5) {
-      const k = (depth - 0.5) * 2;
-      return [lerp(COL_MID[0], COL_FRONT[0], k), lerp(COL_MID[1], COL_FRONT[1], k), lerp(COL_MID[2], COL_FRONT[2], k)];
-    }
-    const k = depth * 2;
-    return [lerp(COL_BACK[0], COL_MID[0], k), lerp(COL_BACK[1], COL_MID[1], k), lerp(COL_BACK[2], COL_MID[2], k)];
-  }
-
-  let angle = 0; // radians
-  let lastFocusIndex = -1;
-  let hoverPaused = false;
-  let clickPauseUntil = 0;
-  const LAP_MS = 58000; // one slow, "astounding" full lap
-  const SPEED = prefersReduced ? 0 : (2 * Math.PI) / LAP_MS; // radians / ms
-
-  function isPaused() {
-    return hoverPaused || Date.now() < clickPauseUntil;
+  // Degrees of rotation PER CARD STEP (not a fixed total) — this way the fan
+  // scales gracefully as more images are added instead of needing retuning.
+  function steps() {
+    const mobile = window.innerWidth <= 760;
+    return {
+      rest: mobile ? 3.2 : 4.5, // small: cards mostly overlap at rest
+      hover: mobile ? 7.5 : 10, // wider: fan opens on hover/focus/tap
+    };
   }
 
   function layout() {
-    const w = stage.clientWidth;
-    const h = stage.clientHeight;
-    const radiusX = w * 0.36;
-    const radiusZ = w * 0.3;
-    const lift = h * 0.11;
-
-    let frontIdx = 0;
-    let bestCos = -Infinity;
+    const { rest, hover } = steps();
+    const center = (n - 1) / 2;
 
     cards.forEach((card, i) => {
-      const a = angle + i * ((2 * Math.PI) / n);
-      const s = Math.sin(a);
-      const c = Math.cos(a);
-      const depth = (c + 1) / 2; // 0 = back, 1 = front
-
-      const x = s * radiusX;
-      const y = -depth * lift + (1 - depth) * (lift * 0.3);
-      const z = c * radiusZ;
-      const fanRotate = s * -26; // degrees — cards fan open toward the viewer
-      const scale = 0.58 + depth * 0.52;
-
-      card.style.transform =
-        "translate(-50%, -50%) translate3d(" +
-        x.toFixed(2) + "px, " + y.toFixed(2) + "px, " + z.toFixed(2) + "px) " +
-        "rotateY(" + fanRotate.toFixed(2) + "deg) scale(" + scale.toFixed(3) + ")";
-      card.style.zIndex = String(Math.round(depth * 1000));
-      card.style.opacity = (0.35 + depth * 0.65).toFixed(3);
-
-      const blur = ((1 - depth) * 2.4).toFixed(2);
-      const brightness = (0.5 + depth * 0.65).toFixed(2);
-      const saturate = (0.55 + depth * 0.6).toFixed(2);
-      card.style.filter = "brightness(" + brightness + ") saturate(" + saturate + ") blur(" + blur + "px)";
-
-      const [r, g, b] = mixColor(depth).map(Math.round);
-      const inner = card.firstElementChild;
-      if (inner) {
-        const glowA = (0.12 + depth * 0.55).toFixed(2);
-        const spread = Math.round(6 + depth * 26);
-        const blurShadow = Math.round(18 + depth * 46);
-        inner.style.boxShadow =
-          "0 " + spread + "px " + blurShadow + "px -8px rgba(" + r + "," + g + "," + b + "," + glowA + ")";
-        inner.style.borderColor = "rgba(" + r + "," + g + "," + b + "," + (0.25 + depth * 0.4).toFixed(2) + ")";
-      }
-
-      if (c > bestCos) {
-        bestCos = c;
-        frontIdx = i;
-      }
+      const k = i - center; // signed offset from the centered card
+      card.style.setProperty("--deg-rest", (k * rest).toFixed(2) + "deg");
+      card.style.setProperty("--deg-hover", (prefersReduced ? k * rest : k * hover).toFixed(2) + "deg");
+      card.style.zIndex = String(100 - Math.round(Math.abs(k))); // centered card stacks on top
+      const dim = 1 - Math.min(Math.abs(k) * 0.045, 0.3);
+      card.style.filter = "brightness(" + dim.toFixed(2) + ")";
     });
-
-    if (frontIdx !== lastFocusIndex && captionEl) {
-      lastFocusIndex = frontIdx;
-      const label = cards[frontIdx].dataset.label || "";
-      captionEl.classList.add("swap");
-      window.setTimeout(() => {
-        captionEl.textContent = label;
-        captionEl.classList.remove("swap");
-      }, 160);
-    }
   }
 
-  function focusCard(i) {
-    const currentA = angle + i * ((2 * Math.PI) / n);
-    const k = Math.round(currentA / (2 * Math.PI));
-    angle -= currentA - k * (2 * Math.PI);
-    clickPauseUntil = Date.now() + 4000;
-  }
+  layout();
+  window.addEventListener("resize", layout);
 
-  cards.forEach((card, i) => {
-    card.setAttribute("tabindex", "0");
-    card.setAttribute("role", "button");
-    card.addEventListener("click", () => focusCard(i));
-    card.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        focusCard(i);
-      }
-    });
+  // Touch fallback — :hover doesn't fire reliably on tap, so tapping the
+  // stage toggles the spread directly; tapping elsewhere closes it again.
+  stage.addEventListener("click", () => {
+    if (!("ontouchstart" in window)) return;
+    stage.classList.toggle("is-spread");
   });
-
-  stage.addEventListener("mouseenter", () => (hoverPaused = true));
-  stage.addEventListener("mouseleave", () => (hoverPaused = false));
-  stage.addEventListener("touchstart", () => (hoverPaused = true), { passive: true });
-  stage.addEventListener(
-    "touchend",
-    () => {
-      hoverPaused = false;
-      clickPauseUntil = Date.now() + 2500;
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (!stage.contains(e.target)) stage.classList.remove("is-spread");
     },
     { passive: true }
   );
 
-  let lastTs = null;
-  function tick(ts) {
-    if (lastTs == null) lastTs = ts;
-    const dt = ts - lastTs;
-    lastTs = ts;
-    if (!isPaused()) angle += SPEED * dt;
-    layout();
-    requestAnimationFrame(tick);
+  // Caption follows whichever card has attention.
+  function setCaption(text) {
+    if (!captionEl) return;
+    captionEl.textContent = text || captionEl.textContent;
+    captionEl.classList.toggle("show", !!text);
   }
-
-  layout();
-  requestAnimationFrame(tick);
-  window.addEventListener("resize", layout);
+  cards.forEach((card) => {
+    card.setAttribute("tabindex", "0");
+    const label = card.dataset.label || "";
+    card.addEventListener("mouseenter", () => setCaption(label));
+    card.addEventListener("focus", () => setCaption(label));
+  });
+  stage.addEventListener("mouseleave", () => setCaption(""));
 })();

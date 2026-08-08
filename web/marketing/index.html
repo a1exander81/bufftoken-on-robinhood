@@ -226,9 +226,12 @@
       </div>
       <div class="split-art reveal">
         <div class="art-card buff-carousel-card">
-          <!-- BUFF'MANIA 3D fan carousel. To add more images, drop the file in
-               /assets/carousel and duplicate a .buff-card block below with its
-               <img src> and a short data-label. No JS edits needed. -->
+          <!-- BUFF'MANIA fanned-deck carousel — cards pivot from a shared bottom
+               point and sit mostly closed at rest; hover/focus/tap spreads them
+               open. To add more images, drop the file in /assets/carousel and
+               duplicate a .buff-card block below with its <img src> and a short
+               data-label. No JS edits needed — the middle card in the list
+               order automatically becomes the centered, front-most card. -->
           <div class="buff-carousel" id="buffCarousel">
             <div class="buff-carousel-stage" id="buffCarouselStage">
               <div class="buff-carousel-track" id="buffCarouselTrack">
@@ -250,11 +253,32 @@
                 <div class="buff-card" data-label="Diamond Paws">
                   <div class="buff-card-inner"><img src="/assets/carousel/buffcat-diamond-paws.jpg" alt="Buff Cat carrying a smaller crying cat on his shoulders in front of a neon Robinhood arrow" loading="lazy"></div>
                 </div>
+                <div class="buff-card" data-label="The Creation">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-creation-of-adam.jpg" alt="Buff Cat as a Sistine Chapel style painting, surrounded by internet reaction-meme faces" loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="Phone Home">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-et-bike.jpg" alt="Buff Cat and a smaller white cat wrapped in a towel, riding in a bike basket like E.T." loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="The Cousins">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-cousins.jpg" alt="Two Buff Cats on a porch, one in flannel and one in a chain and cap" loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="Neverending Gains">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-neverending-gains.jpg" alt="Buff Cat riding a giant flying luck-dragon, BUFFCAT branded gear, castle in the clouds" loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="Get In Loser">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-miami-vice.jpg" alt="Two Buff Cats stepping out of a yellow sports car, Miami Vice style, $Buffcat neon sign" loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="Buffenstein 3D">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-buffenstein-3d.jpg" alt="Retro video game box art, Buff Cat as a soldier in front of a castle, titled Buffenstein 3D" loading="lazy"></div>
+                </div>
+                <div class="buff-card" data-label="Paw Fiction">
+                  <div class="buff-card-inner"><img src="/assets/carousel/buffcat-paw-fiction.jpg" alt="Movie poster parody, Buff Cat in a suit pointing a gun, titled Paw Fiction" loading="lazy"></div>
+                </div>
               </div>
             </div>
-            <div class="buff-carousel-caption" id="buffCarouselCaption">Old Money</div>
+            <div class="buff-carousel-caption" id="buffCarouselCaption"></div>
           </div>
-          <div class="art-caption">BUFF'MANIA GALLERY · SPINS SLOWLY · HOVER TO PAUSE</div>
+          <div class="art-caption">BUFF'MANIA GALLERY · HOVER TO SPREAD THE DECK</div>
         </div>
       </div>
     </div>
