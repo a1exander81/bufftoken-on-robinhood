@@ -226,12 +226,13 @@
       </div>
       <div class="split-art reveal">
         <div class="art-card buff-carousel-card">
-          <!-- BUFF'MANIA fanned-deck carousel — cards pivot from a shared bottom
-               point and sit mostly closed at rest; hover/focus/tap spreads them
-               open. To add more images, drop the file in /assets/carousel and
-               duplicate a .buff-card block below with its <img src> and a short
-               data-label. No JS edits needed — the middle card in the list
-               order automatically becomes the centered, front-most card. -->
+          <!-- BUFF'MANIA stacked carousel — cards lean in a sideways stack and
+               slowly cycle clockwise: every few seconds the front card moves
+               to the back and the next takes its place. Click/tap any visible
+               card to bring it to front immediately. To add more images, drop
+               the file in /assets/carousel and duplicate a .buff-card block
+               below with its <img src> and a short data-label. No JS edits
+               needed — the first card in this list starts front-and-center. -->
           <div class="buff-carousel" id="buffCarousel">
             <div class="buff-carousel-stage" id="buffCarouselStage">
               <div class="buff-carousel-track" id="buffCarouselTrack">
@@ -278,7 +279,7 @@
             </div>
             <div class="buff-carousel-caption" id="buffCarouselCaption"></div>
           </div>
-          <div class="art-caption">BUFF'MANIA GALLERY · HOVER TO SPREAD THE DECK</div>
+          <div class="art-caption">BUFF'MANIA GALLERY · TAP A CARD TO BRING IT FORWARD</div>
         </div>
       </div>
     </div>

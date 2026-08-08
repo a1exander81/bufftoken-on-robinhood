@@ -1,23 +1,31 @@
-/* Buff'mania fanned-deck carousel — extends the shared tokens in buffcat-robinhood.css.
-   Rest state: cards pivot from a shared bottom point and sit almost closed,
-   each hiding most of the one behind it. Hover/focus/tap spreads the fan open.
-   Swap-in point for new images: see the CAROUSEL card markup in index.html
-   (search for id="buffCarouselTrack"). Each .buff-card is one slide — order in
-   the HTML determines the fan order, and the middle card in the list is
-   automatically the one centered/on top. */
+/* Buff'mania stacked carousel — extends the shared tokens in buffcat-robinhood.css.
+   A handful of cards lean in a sideways stack; every few seconds the front
+   card cycles to the back and the next one takes its place, so the whole
+   stack reads as slowly turning clockwise. Swap-in point for new images: see
+   the CAROUSEL card markup in index.html (search for id="buffCarouselTrack").
+   Each .buff-card is one slide — JS reads however many exist, so add more by
+   duplicating a block, no JS edits needed. The first card in the HTML list
+   is the one that starts front-and-center. */
+
+/* Give the art column more room in the Token section specifically (scoped
+   by #token so About/Community's shared .split layout is untouched). */
+#token .split{grid-template-columns:1.3fr .95fr}
+@media(max-width:880px){
+  #token .split{grid-template-columns:1fr}
+}
 
 .buff-carousel-card{
   display:flex;flex-direction:column;align-items:center;
-  gap:20px;justify-content:center;min-height:420px;
-  overflow:visible; /* base .art-card clips overflow; the fan needs room past the panel edge */
+  gap:22px;justify-content:center;min-height:560px;
+  overflow:visible; /* base .art-card clips overflow; the stack needs room past the panel edge */
 }
 
 .buff-carousel{
-  width:100%;display:flex;flex-direction:column;align-items:center;gap:16px;
+  width:100%;display:flex;flex-direction:column;align-items:center;gap:18px;
 }
 
 .buff-carousel-stage{
-  position:relative;width:100%;height:clamp(230px,27vw,300px);
+  position:relative;width:100%;height:clamp(380px,44vw,520px);
 }
 
 .buff-carousel-track{
@@ -25,65 +33,46 @@
 }
 
 .buff-card{
-  --deg-rest: 0deg;
-  --deg-hover: 0deg;
-  --card-scale: 1;
-  position:absolute;left:50%;bottom:6%;
-  width:clamp(100px,14vw,168px);
+  position:absolute;top:50%;left:38%;
+  width:clamp(210px,27vw,340px);
   aspect-ratio:4/5;
-  transform-origin:50% 100%; /* shared pivot: every card fans from this one point */
-  transform:translateX(-50%) rotate(var(--deg-rest)) scale(var(--card-scale));
-  transition:transform .55s cubic-bezier(.19,.85,.24,1), filter .35s ease;
+  transition:transform 1.1s cubic-bezier(.22,.8,.24,1), opacity .9s ease, filter .9s ease;
   cursor:pointer;
   outline:none;
-}
-
-.buff-carousel-stage:hover .buff-card,
-.buff-carousel-stage:focus-within .buff-card,
-.buff-carousel-stage.is-spread .buff-card{
-  transform:translateX(-50%) rotate(var(--deg-hover)) scale(var(--card-scale));
-}
-
-.buff-card:hover,
-.buff-card:focus-visible{
-  --card-scale: 1.1;
-  z-index:999 !important;
-  filter:brightness(1) !important;
+  will-change:transform,opacity,filter;
 }
 
 .buff-card-inner{
-  width:100%;height:100%;border-radius:16px;overflow:hidden;position:relative;
+  width:100%;height:100%;border-radius:18px;overflow:hidden;position:relative;
   background:linear-gradient(160deg,#141d19,#070b09);
   border:2px solid rgba(255,172,58,.28);
-  box-shadow:0 14px 30px rgba(0,0,0,.55), 0 0 0 1px rgba(0,200,5,.08);
+  box-shadow:0 22px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(0,200,5,.08);
   transition:border-color .25s ease, box-shadow .25s ease;
 }
 .buff-card-inner img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
 .buff-card-inner::after{
   content:"";position:absolute;inset:0;border-radius:inherit;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), inset 0 -24px 32px -18px rgba(0,0,0,.6);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), inset 0 -30px 40px -20px rgba(0,0,0,.6);
   pointer-events:none;
 }
-.buff-card:hover .buff-card-inner,
 .buff-card:focus-visible .buff-card-inner{
   border-color:var(--green);
-  box-shadow:0 20px 44px rgba(0,0,0,.6), 0 0 24px rgba(0,200,5,.35);
+  box-shadow:0 24px 54px rgba(0,0,0,.6), 0 0 26px rgba(0,200,5,.35);
 }
 
 .buff-carousel-caption{
-  font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;
+  font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;
   color:var(--green-soft);background:rgba(0,200,5,.08);border:1px solid var(--line);
-  border-radius:999px;padding:8px 20px;text-align:center;
-  min-width:120px;min-height:16px;
-  opacity:0;transform:translateY(4px);
-  transition:opacity .25s ease, transform .25s ease;
+  border-radius:999px;padding:9px 22px;text-align:center;
+  min-width:140px;
+  opacity:1;transition:opacity .18s ease;
 }
-.buff-carousel-caption.show{opacity:1;transform:translateY(0)}
+.buff-carousel-caption.swap{opacity:0}
 
 @media(max-width:760px){
-  .buff-carousel-stage{height:clamp(180px,54vw,230px)}
-  .buff-card{width:clamp(86px,25vw,120px)}
-  .buff-carousel-card{min-height:340px}
+  .buff-carousel-stage{height:clamp(270px,72vw,340px)}
+  .buff-card{width:clamp(150px,44vw,220px);left:42%}
+  .buff-carousel-card{min-height:400px}
 }
 
 @media (prefers-reduced-motion: reduce){
